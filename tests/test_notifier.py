@@ -23,11 +23,20 @@ class TestHealthcheck(AsyncTestCase):
 class TestNewTranslation(AsyncTestCase):
 
     @patch('aiohttp.request')
-    def test_new_translation(self, mock_get):
+    @patch('mandrill.Mandrill')
+    def test_new_translation(self, mock_send, mock_get):
         req = MagicMock()
         req.json.return_value = self.make_fut(json.loads(read('wti_hook.json')))
-        req.app = {const.MASTER_LOCALE: 'en'}
-        mock_get.return_value.text.return_value = self.make_fut('Are you sure you want to delete this comment?')
+        req.app = {
+            const.MASTER_LOCALE: 'en',
+            const.WTI_KEY: 'wti_key',
+            const.MANDRILL_KEY: 'mandrill_key'
+        }
+        mock_text = MagicMock()
+        mock_text.text.return_value = self.make_fut('Are you sure you want to delete this comment?')
+        mock_users = MagicMock()
+        mock_users.json.return_value = self.make_fut([{'id': 123, 'email': 'test@test.com'}])
+        mock_get.side_effect = iter([self.make_fut(mock_text), self.make_fut(mock_users)])
 
         res = self.coro(notifier.new_translation(req))
 
