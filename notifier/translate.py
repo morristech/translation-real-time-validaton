@@ -12,11 +12,12 @@ def get_wti_key(url):
 def file(api_key, locale, file_id):
     url = file_url_pattern.format(api_key=api_key, locale=locale, file_id=file_id)
     res = aiohttp.request('get', url)
-    yield from res.text()
+    return (yield from res.text())
+
 
 def master(api_key, locale, url):
     args = parse(file_url_pattern, url).named
-    yield from file(api_key, locale, args['file_id'])
+    return (yield from file(api_key, locale, args['file_id']))
 
 
 def user(api_key, user_id):
