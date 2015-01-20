@@ -17,7 +17,7 @@ def new_translation(req):
 
     base = yield from translate.master(wti_key, locale, file_url)
     other = payload['translation']['text']
-    diff = compare.diff(base, other)
+    diff = yield from compare.diff(base, other)
 
     if diff:
         user_id = payload['user_id']
