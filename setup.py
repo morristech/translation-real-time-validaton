@@ -8,7 +8,7 @@ version = '0.0.1'
 def read(f):
     return open(os.path.join(os.path.dirname(__file__), f)).read().strip()
 
-install_reqs = parse_requirements('requirements.txt')
+install_reqs = parse_requirements('requirements.txt', session=pip.download.PipSession())
 reqs = [str(ir.req) for ir in install_reqs]
 
 

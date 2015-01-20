@@ -10,11 +10,20 @@ logger = logging.getLogger('notifier')
 @asyncio.coroutine
 def new_translation(req):
     data = yield from req.json()
-    file_url = data['payload']['api_url']
+    payload = data['payload']
+    file_url = payload['api_url']
     locale = req.app[const.MASTER_LOCALE]
-    base = yield from translate.master(locale, file_url)
-    other = data['payload']['translation']['text']
+    wti_key = translate.get_wti_key(file_url)
+
+    base = yield from translate.master(wti_key, locale, file_url)
+    other = payload['translation']['text']
     diff = compare.diff(base, other)
+
+    if diff:
+        user_id = payload['user_id']
+        user = yield from translate.user(wti_key, user_id)
+        mailer.send(user, diff)
+
     return web.Response()
 
 

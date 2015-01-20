@@ -2,6 +2,11 @@ import aiohttp
 from parse import parse
 
 file_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/files/{file_id}/locales/{locale}'
+user_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/users.json'
+
+
+def get_wti_key(url):
+    return parse(file_url_pattern, url).named['api_key']
 
 
 def file(api_key, locale, file_id):
@@ -9,6 +14,16 @@ def file(api_key, locale, file_id):
     res = aiohttp.request('get', url)
     yield from res.text()
 
-def master(locale, url):
+def master(api_key, locale, url):
     args = parse(file_url_pattern, url).named
-    yield from file(args['api_key'], locale, args['file_id'])
+    yield from file(api_key, locale, args['file_id'])
+
+
+def user(api_key, user_id):
+    url = user_url_pattern.format(api_key=api_key)
+    res = aiohttp.request('get', url)
+    users = yield from res.json()
+    for user in users:
+        if user['id'] == user_id:
+            return user
+    return {}
