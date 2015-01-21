@@ -26,6 +26,7 @@ def new_translation(req):
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
         mailer.send(mandrill_key, user, diff)
+        translate.change_status(wti_key, string_id)
 
     return web.Response()
 

@@ -23,7 +23,10 @@ def user(api_key, user_id):
     return {}
 
 
-def unverify(api_key, status=''):
+def change_status(api_key, string_id, status='status_unverified'):
     message = {
-        "status": "Current"
+        'status': status
     }
+    url = string_url_pattern.format(api_key=api_key, string_id=string_id)
+    res = yield from aiohttp.request('put', url)
+    return res.status == 202

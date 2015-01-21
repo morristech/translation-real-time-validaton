@@ -31,3 +31,12 @@ class TestTranslate(AsyncTestCase):
         mock_get.return_value = self.make_fut(mock_json)
         actual = self.coro(translate.user('key', 3))
         self.assertEqual({}, actual)
+
+    @patch('aiohttp.request')
+    def test_verify(self, mock_put):
+        mock_res = MagicMock()
+        mock_res.status = 202
+        mock_put.return_value = self.make_fut(mock_res)
+        actual = self.coro(translate.change_status('key', 3))
+        self.assertTrue(actual)
+        mock_put.assert_called_with('put', 'https://webtranslateit.com/api/projects/key/strings/3.json')
