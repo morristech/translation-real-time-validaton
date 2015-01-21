@@ -18,11 +18,11 @@ def new_translation(req):
 
     base = yield from translate.master(wti_key, locale, file_url)
     other = payload['translation']['text']
-    diff = yield from compare.diff(base + '\n\naaa', other)
-    diff.base_path = 'aaa'
-    diff.other_path = 'bbb'
+    diff = yield from compare.diff(base, other)
 
     if diff:
+        diff.base_path = 'Language: {}'.format(locale)
+        diff.other_path = 'Language: {}'.format(payload['locale'])
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
         mailer.send(mandrill_key, user, diff)

@@ -23,8 +23,8 @@ class TestHealthcheck(AsyncTestCase):
 class TestNewTranslation(AsyncTestCase):
 
     @patch('aiohttp.request')
-    @patch('mandrill.Mandrill')
-    def test_new_translation(self, mock_send, mock_get):
+    @patch('notifier.mailer')
+    def test_new_translation(self, mock_mailer, mock_get):
         req = MagicMock()
         req.json.return_value = self.make_fut(json.loads(read('wti_hook.json')))
         req.app = {
@@ -41,3 +41,4 @@ class TestNewTranslation(AsyncTestCase):
         res = self.coro(notifier.new_translation(req))
 
         self.assertEqual(200, res.status)
+        self.assertFalse(mock_mailer.send.called)
