@@ -34,9 +34,7 @@ class TestNewTranslation(AsyncTestCase):
         }
         mock_json = MagicMock()
         mock_json.json.return_value = self.make_fut({
-            'translations': {
-                'text': 'Are you sure you want to delete this comment?'
-            }
+            'text': 'Are you sure you want to delete this comment?'
         })
         mock_users = MagicMock()
         mock_users.json.return_value = self.make_fut([{'id': 123, 'email': 'test@test.com'}])

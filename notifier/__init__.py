@@ -11,6 +11,10 @@ logger = logging.getLogger('notifier')
 def new_translation(req):
     data = yield from req.json()
     payload = data['payload']
+
+    if payload['translation']['status'] != 'status_unproofread':
+        return web.Response()
+
     string_id = payload['translation']['string']['id']
     locale = req.app[const.MASTER_LOCALE]
     wti_key = req.app[const.WTI_KEY]
@@ -26,7 +30,7 @@ def new_translation(req):
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
         mailer.send(mandrill_key, user, diff)
-        translate.change_status(wti_key, string_id)
+        translate.change_status(wti_key, string_id, payload['locale'], other)
 
     return web.Response()
 
