@@ -1,19 +1,16 @@
 import aiohttp
 from parse import parse
 
-file_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/files/{file_id}/locales/{locale}'
+translation_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings/{string_id}.json?filters[locale]={locale}'
 user_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/users.json'
+string_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings/{string_id}.json'
 
 
-def file(api_key, locale, file_id):
-    url = file_url_pattern.format(api_key=api_key, locale=locale, file_id=file_id)
+def string(api_key, locale, string_id):
+    url = translation_url_pattern.format(api_key=api_key, locale=locale, string_id=string_id)
     res = yield from aiohttp.request('get', url)
-    return (yield from res.text())
-
-
-def master(api_key, locale, url):
-    args = parse(file_url_pattern, url).named
-    return (yield from file(api_key, locale, args['file_id']))
+    data = yield from res.json()
+    return data['translations']['text']
 
 
 def user(api_key, user_id):
@@ -24,3 +21,9 @@ def user(api_key, user_id):
         if user['id'] == user_id:
             return user
     return {}
+
+
+def unverify(api_key, status=''):
+    message = {
+        "status": "Current"
+    }

@@ -11,12 +11,12 @@ logger = logging.getLogger('notifier')
 def new_translation(req):
     data = yield from req.json()
     payload = data['payload']
-    file_url = payload['api_url']
+    string_id = payload['translation']['string']['id']
     locale = req.app[const.MASTER_LOCALE]
     wti_key = req.app[const.WTI_KEY]
     mandrill_key = req.app[const.MANDRILL_KEY]
 
-    base = yield from translate.master(wti_key, locale, file_url)
+    base = yield from translate.string(wti_key, locale, string_id)
     other = payload['translation']['text']
     diff = yield from compare.diff(base, other)
 

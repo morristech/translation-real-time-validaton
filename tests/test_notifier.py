@@ -32,11 +32,15 @@ class TestNewTranslation(AsyncTestCase):
             const.WTI_KEY: 'wti_key',
             const.MANDRILL_KEY: 'mandrill_key'
         }
-        mock_text = MagicMock()
-        mock_text.text.return_value = self.make_fut('Are you sure you want to delete this comment?')
+        mock_json = MagicMock()
+        mock_json.json.return_value = self.make_fut({
+            'translations': {
+                'text': 'Are you sure you want to delete this comment?'
+            }
+        })
         mock_users = MagicMock()
         mock_users.json.return_value = self.make_fut([{'id': 123, 'email': 'test@test.com'}])
-        mock_get.side_effect = iter([self.make_fut(mock_text), self.make_fut(mock_users)])
+        mock_get.side_effect = iter([self.make_fut(mock_json), self.make_fut(mock_users)])
 
         res = self.coro(notifier.new_translation(req))
 
