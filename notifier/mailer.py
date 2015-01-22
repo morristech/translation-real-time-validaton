@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import inlinestyler.utils as inline_styler
 import mandrill
+import asyncio
 
 email_template = """
 <style type="text/css">
@@ -11,9 +12,10 @@ email_template = """
     .diff_add {background-color:#aaffaa}
     .diff_chg {background-color:#ffff77}
     .diff_sub {background-color:#ffaaaa}
+    table {width:100%;}
 </style>
 <table class="diff" id="difflib_chg_to4__top"
-       cellspacing="0" cellpadding="0" rules="groups" >
+       cellspacing="0" cellpadding="0" rules="groups" width="600">
     <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
     <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
 
@@ -47,17 +49,17 @@ def _fill_template(diff):
     return email_soup.prettify()
 
 
-def send(mandrill_key, user, diff):
+@asyncio.coroutine
+def send(mandrill_key, user_email, diff):
     mandrill_client = mandrill.Mandrill(mandrill_key)
     email = inline_styler.inline_css(_fill_template(diff))
-    address = user['email']
     message = {
         'from_email': 'message.from_email@example.com',
         'from_name': 'Example Name',
         'headers': {'Reply-To': 'message.reply@example.com'},
         'subject': 'example subject',
         'html': email,
-        'to': [{'email': 'tomek.kwiecien@gmail.com',
+        'to': [{'email': user_email,
              'name': 'Recipient Name',
              'type': 'to'}],
     }

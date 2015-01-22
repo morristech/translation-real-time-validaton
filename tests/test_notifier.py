@@ -26,7 +26,7 @@ class TestNewTranslation(AsyncTestCase):
     @patch('notifier.mailer')
     def test_new_translation(self, mock_mailer, mock_get):
         req = MagicMock()
-        req.json.return_value = self.make_fut(json.loads(read('wti_hook.json')))
+        req.post.return_value = self.make_fut({'payload': read('wti_hook.json')})
         req.app = {
             const.MASTER_LOCALE: 'en',
             const.WTI_KEY: 'wti_key',

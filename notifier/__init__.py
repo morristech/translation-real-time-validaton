@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import json
 from aiohttp import web
 
 from . import compare, translate, const, mailer
@@ -9,8 +10,8 @@ logger = logging.getLogger('notifier')
 
 @asyncio.coroutine
 def new_translation(req):
-    data = yield from req.json()
-    payload = data['payload']
+    data = yield from req.post()
+    payload = json.loads(data['payload'])
 
     if payload['translation']['status'] != 'status_unproofread':
         return web.Response()
@@ -29,8 +30,9 @@ def new_translation(req):
         diff.other_path = 'Language: {}'.format(payload['locale'])
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
-        mailer.send(mandrill_key, user, diff)
-        translate.change_status(wti_key, string_id, payload['locale'], other)
+        user_email = user.get('email', 'tomek.kwiecien@gmail.com')
+        yield from mailer.send(mandrill_key, user_email, diff)
+        yield from translate.change_status(wti_key, payload['locale'], string_id, other)
 
     return web.Response()
 
