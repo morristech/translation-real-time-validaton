@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import inlinestyler.utils as inline_styler
 import mandrill
 
 email_template = """
@@ -48,7 +49,7 @@ def _fill_template(diff):
 
 def send(mandrill_key, user, diff):
     mandrill_client = mandrill.Mandrill(mandrill_key)
-    email = _fill_template(diff)
+    email = inline_styler.inline_css(_fill_template(diff))
     address = user['email']
     message = {
         'from_email': 'message.from_email@example.com',
@@ -60,5 +61,5 @@ def send(mandrill_key, user, diff):
              'name': 'Recipient Name',
              'type': 'to'}],
     }
-    
+
     mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')

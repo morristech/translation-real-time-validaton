@@ -1,7 +1,7 @@
 Markdown==2.5.2
 aiohttp==0.14.1
 beautifulsoup4==4.3.2
--e git://github.com/KeepSafe/content-validator.git@554c32567e0bc0a388a6d26511a0a7eea75b1038#egg=content_validator-dev
+-e git://github.com/KeepSafe/content-validator.git#egg=content_validator
 docopt==0.4.0
 hoep==1.0.2
 html2text==2014.12.29

@@ -1,8 +1,8 @@
 {
   "payload": {
     "project_id": 123,
-    "string_id": 1234,
-    "user_id": 123,
+    "string_id": 7266198,
+    "user_id": 34460,
     "locale": "fr",
     "file_id": 12345,
     "api_url": "https://webtranslateit.com/api/projects/98e71ee45042066f1053ed900b4e8f4ec1f98451/files/1943/locales/fr",
@@ -15,7 +15,7 @@
       "updated_at": "2013-04-12T14:37:25Z",
       "version": 16,
       "string": {
-        "id": 772316,
+        "id": 7266198,
         "key": "_comment.delete_are_you_sure",
         "plural": false,
         "type": "String",

@@ -15,7 +15,7 @@ def new_translation(req):
     if payload['translation']['status'] != 'status_unproofread':
         return web.Response()
 
-    string_id = payload['translation']['string']['id']
+    string_id = payload['string_id']
     locale = req.app[const.MASTER_LOCALE]
     wti_key = req.app[const.WTI_KEY]
     mandrill_key = req.app[const.MANDRILL_KEY]
