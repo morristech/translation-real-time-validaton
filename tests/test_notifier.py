@@ -9,7 +9,7 @@ from . import AsyncTestCase
 
 def read(path):
     with open(os.path.join('tests/fixtures', path)) as fp:
-        return fp.read()
+        return json.load(fp)
 
 
 class TestHealthcheck(AsyncTestCase):
@@ -26,7 +26,7 @@ class TestNewTranslation(AsyncTestCase):
     @patch('notifier.mailer')
     def test_new_translation(self, mock_mailer, mock_get):
         req = MagicMock()
-        req.post.return_value = self.make_fut({'payload': read('wti_hook.json')})
+        req.post.return_value = self.make_fut(read('wti_hook.json'))
         req.app = {
             const.MASTER_LOCALE: 'en',
             const.WTI_KEY: 'wti_key',
@@ -34,7 +34,7 @@ class TestNewTranslation(AsyncTestCase):
         }
         mock_json = MagicMock()
         mock_json.json.return_value = self.make_fut({
-            'text': 'Are you sure you want to delete this comment?'
+            'text': '#bbbb'
         })
         mock_users = MagicMock()
         mock_users.json.return_value = self.make_fut([{'id': 123, 'email': 'test@test.com'}])
@@ -45,10 +45,16 @@ class TestNewTranslation(AsyncTestCase):
         self.assertEqual(200, res.status)
         self.assertFalse(mock_mailer.send.called)
 
+
 class TestAllTranslations(AsyncTestCase):
 
-    def test_all_translations(self):
+    @patch('aiohttp.request')
+    def test_all_translations(self, mock_get):
         req = MagicMock()
+        req.GET = {'project_key': 'api_key'}
+        res = MagicMock()
+        res.json.return_value = self.make_fut(read('files.json'))
+        mock_get.return_value = self.make_fut(res)
 
         actual = self.coro(notifier.all_translations(req))
 

@@ -39,8 +39,9 @@ def new_translation(req):
 
 @asyncio.coroutine
 def all_translations(req):
+    api_key = req.GET['project_key']
+    locales, master_files, _ = yield from translate.files(api_key)
     return web.Response()
-
 
 
 @asyncio.coroutine
