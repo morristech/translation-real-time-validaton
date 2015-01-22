@@ -1,0 +1,17 @@
+{
+  "id": 22683982,
+  "locale": "en-US",
+  "text": "#aaa\n\naaa",
+  "status": "status_unproofread",
+  "created_at": "2015-01-22T00:04:35Z",
+  "updated_at": "2015-01-22T00:04:35Z",
+  "version": 1,
+  "string": {
+    "id": 7302252,
+    "key": "test_hook",
+    "plural": false,
+    "type": "String",
+    "dev_comment": "",
+    "status": "Current"
+  }
+}

@@ -23,7 +23,7 @@ def new_translation(req):
 
     base = yield from translate.string(wti_key, locale, string_id)
     other = payload['translation']['text']
-    diff = yield from compare.diff(base, other)
+    diff = yield from compare.diff(base.text, other)
 
     if diff:
         diff.base_path = 'Language: {}'.format(locale)
@@ -40,7 +40,15 @@ def new_translation(req):
 @asyncio.coroutine
 def all_translations(req):
     api_key = req.GET['project_key']
-    locales, master_files, _ = yield from translate.files(api_key)
+    locales = yield from translate.locales(api_key)
+    strings = yield from translate.strings(api_key)
+    for string in strings:
+        base = yield from translate.string(api_key, string.id, locales.source)
+        for locale in locales.targets:
+            translation = yield from translate.string(api_key, string.id, locale)
+            diff = yield from compare.diff(base.text, translation.text)
+            if diff:
+                print(diff)
     return web.Response()
 
 

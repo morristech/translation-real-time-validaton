@@ -6,24 +6,32 @@ from functools import partial
 from collections import namedtuple
 
 translation_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings/{string_id}/locales/{locale}/translations.json'
-user_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/users.json'
+users_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/users.json'
 status_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings/{string_id}/locales/{locale}/translations'
 project_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}.json'
+strings_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings.json'
 
 Locales = namedtuple('Locales', ['source', 'targets'])
-MasterFile = namedtuple('MasterFile', ['id', 'path'])
-File = namedtuple('File', ['id', 'master_id', 'path'])
+String = namedtuple('String', ['id', 'file_id'])
+Translation = namedtuple('Translation', ['id', 'locale', 'text'])
 
 
 def string(api_key, locale, string_id):
     url = translation_url_pattern.format(api_key=api_key, locale=locale, string_id=string_id)
     res = yield from aiohttp.request('get', url)
     data = yield from res.json()
-    return data['text']
+    return Translation(id=string_id, locale=locale, text=data['text'])
+
+
+def strings(api_key):
+    url = strings_url_pattern.format(api_key=api_key)
+    res = yield from aiohttp.request('get', url)
+    data = yield from res.json()
+    return (String._make([s['id'], s['file']['id']]) for s in data)
 
 
 def user(api_key, user_id):
-    url = user_url_pattern.format(api_key=api_key)
+    url = users_url_pattern.format(api_key=api_key)
     res = yield from aiohttp.request('get', url)
     users = yield from res.json()
     for user in users:
@@ -44,14 +52,11 @@ def change_status(api_key, locale, string_id, text, status='status_unverified'):
     return res.status == 202
 
 
-def files(api_key):
+def locales(api_key):
     url = project_url_pattern.format(api_key=api_key)
     res = yield from aiohttp.request('get', url)
     data = yield from res.json()
     project = data['project']
-    locales = Locales._make([project['source_locale']['code'], map(lambda l: l['code'], project['target_locales'])])
-    master_files = (MasterFile._make([f['id'], f['name']])
-                                     for f in project['project_files'] if not f['master_project_file_id'])
-    files = (File._make([f['id'], f['master_project_file_id'], f['name']])
-                        for f in project['project_files'] if f['master_project_file_id'])
-    return locales, master_files, files
+    source = project['source_locale']['code']
+    targets = (l['code'] for l in project['target_locales'] if l['code'] != source)
+    return Locales(source=source, targets=targets)

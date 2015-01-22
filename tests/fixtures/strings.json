@@ -1,0 +1,343 @@
+[{
+  "id": 6485380,
+  "key": "description",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376359
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 2,
+  "character_count": 16,
+  "created_at": "2014-10-07T10:54:24Z",
+  "updated_at": "2014-10-07T10:54:24Z",
+  "has_discussions": false
+}, {
+  "id": 6485381,
+  "key": "name",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376359
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 3,
+  "character_count": 17,
+  "created_at": "2014-10-07T10:54:24Z",
+  "updated_at": "2014-10-07T10:54:24Z",
+  "has_discussions": false
+}, {
+  "id": 6485382,
+  "key": "description",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376361
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 1,
+  "character_count": 5,
+  "created_at": "2014-10-07T10:54:24Z",
+  "updated_at": "2014-10-07T10:54:24Z",
+  "has_discussions": false
+}, {
+  "id": 6485383,
+  "key": "name",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376361
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 2,
+  "character_count": 8,
+  "created_at": "2014-10-07T10:54:24Z",
+  "updated_at": "2014-10-07T10:54:24Z",
+  "has_discussions": false
+}, {
+  "id": 6485384,
+  "key": "name",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376363
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 2,
+  "character_count": 9,
+  "created_at": "2014-10-07T10:54:26Z",
+  "updated_at": "2014-10-07T10:54:26Z",
+  "has_discussions": false
+}, {
+  "id": 6485385,
+  "key": "---",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376365
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 1,
+  "character_count": 9,
+  "created_at": "2014-10-07T10:54:27Z",
+  "updated_at": "2014-10-07T10:54:27Z",
+  "has_discussions": false
+}, {
+  "id": 6485386,
+  "key": "name",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376367
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 1,
+  "character_count": 11,
+  "created_at": "2014-10-07T11:15:50Z",
+  "updated_at": "2014-10-07T11:15:50Z",
+  "has_discussions": false
+}, {
+  "id": 6485387,
+  "key": "---",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 376369
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 1,
+  "character_count": 9,
+  "created_at": "2014-10-07T11:15:51Z",
+  "updated_at": "2014-10-07T11:15:51Z",
+  "has_discussions": false
+}, {
+  "id": 7266197,
+  "key": "---",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395409
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": null,
+  "status": "Current",
+  "labels": "",
+  "word_count": 123,
+  "character_count": 671,
+  "created_at": "2015-01-21T14:45:47Z",
+  "updated_at": "2015-01-21T14:45:47Z",
+  "has_discussions": false
+}, {
+  "id": 7266198,
+  "key": "subject",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "After the user activate his trial period",
+  "status": "Current",
+  "labels": "",
+  "word_count": 4,
+  "character_count": 32,
+  "created_at": "2015-01-21T14:47:50Z",
+  "updated_at": "2015-01-21T17:40:04Z",
+  "has_discussions": false
+}, {
+  "id": 7266199,
+  "key": "header_bg_color",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "dont translate",
+  "status": "Current",
+  "labels": "",
+  "word_count": 1,
+  "character_count": 10,
+  "created_at": "2015-01-21T14:47:50Z",
+  "updated_at": "2015-01-21T14:47:50Z",
+  "has_discussions": false
+}, {
+  "id": 7266200,
+  "key": "content_header_bg",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "",
+  "status": "Current",
+  "labels": "",
+  "word_count": 16,
+  "character_count": 182,
+  "created_at": "2015-01-21T14:47:50Z",
+  "updated_at": "2015-01-21T14:47:50Z",
+  "has_discussions": false
+}, {
+  "id": 7266201,
+  "key": "list_content",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "",
+  "status": "Current",
+  "labels": "",
+  "word_count": 40,
+  "character_count": 251,
+  "created_at": "2015-01-21T14:47:50Z",
+  "updated_at": "2015-01-21T14:47:50Z",
+  "has_discussions": false
+}, {
+  "id": 7266202,
+  "key": "list_left",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "",
+  "status": "Current",
+  "labels": "",
+  "word_count": 79,
+  "character_count": 440,
+  "created_at": "2015-01-21T14:47:50Z",
+  "updated_at": "2015-01-21T14:47:50Z",
+  "has_discussions": false
+}, {
+  "id": 7266203,
+  "key": "list_right",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "",
+  "status": "Current",
+  "labels": "",
+  "word_count": 61,
+  "character_count": 364,
+  "created_at": "2015-01-21T14:47:51Z",
+  "updated_at": "2015-01-21T14:47:51Z",
+  "has_discussions": false
+}, {
+  "id": 7266204,
+  "key": "footer_content",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "",
+  "status": "Current",
+  "labels": "",
+  "word_count": 13,
+  "character_count": 72,
+  "created_at": "2015-01-21T14:47:51Z",
+  "updated_at": "2015-01-21T14:47:51Z",
+  "has_discussions": false
+}, {
+  "id": 7302252,
+  "key": "test_hook",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": 395411
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "",
+  "status": "Current",
+  "labels": "",
+  "word_count": 1,
+  "character_count": 7,
+  "created_at": "2015-01-22T00:04:35Z",
+  "updated_at": "2015-01-22T00:04:35Z",
+  "has_discussions": false
+}, {
+  "id": 7303857,
+  "key": "2015-01-22 10:30:35 +0100",
+  "project": {
+    "id": 9800
+  },
+  "file": {
+    "id": null
+  },
+  "plural": false,
+  "type": "String",
+  "dev_comment": "",
+  "status": "Current",
+  "labels": "",
+  "word_count": null,
+  "character_count": null,
+  "created_at": "2015-01-22T09:30:35Z",
+  "updated_at": "2015-01-22T09:30:35Z",
+  "has_discussions": false
+}]

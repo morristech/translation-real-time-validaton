@@ -53,7 +53,12 @@ class TestAllTranslations(AsyncTestCase):
         req = MagicMock()
         req.GET = {'project_key': 'api_key'}
         res = MagicMock()
-        res.json.return_value = self.make_fut(read('files.json'))
+        res.json.side_effect = iter([
+            self.make_fut(read('project.json')),
+            self.make_fut(read('strings.json')),
+            self.make_fut(read('translation_en-US.json')),
+            self.make_fut(read('translation_pl.json'))
+        ])
         mock_get.return_value = self.make_fut(res)
 
         actual = self.coro(notifier.all_translations(req))
