@@ -44,3 +44,12 @@ class TestNewTranslation(AsyncTestCase):
 
         self.assertEqual(200, res.status)
         self.assertFalse(mock_mailer.send.called)
+
+class TestAllTranslations(AsyncTestCase):
+
+    def test_all_translations(self):
+        req = MagicMock()
+
+        actual = self.coro(notifier.all_translations(req))
+
+        self.assertEqual(200, actual.status)

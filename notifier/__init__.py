@@ -38,6 +38,12 @@ def new_translation(req):
 
 
 @asyncio.coroutine
+def all_translations(req):
+    return web.Response()
+
+
+
+@asyncio.coroutine
 def healthcheck(req):
     return web.Response()
 
@@ -58,6 +64,7 @@ def main(global_config, **settings):
 
     logger.info('Initializing public api endpoints')
     app.router.add_route('GET', '/', healthcheck)
+    app.router.add_route('GET', '/translations', all_translations)
     app.router.add_route('POST', '/translations', new_translation)
 
     return app

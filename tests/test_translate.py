@@ -40,7 +40,7 @@ class TestTranslate(AsyncTestCase):
         self.assertEqual({}, actual)
 
     @patch('aiohttp.request')
-    def test_verify(self, mock_put):
+    def test_change_status_happy_path(self, mock_put):
         mock_res = MagicMock()
         mock_res.status = 202
         mock_put.return_value = self.make_fut(mock_res)
