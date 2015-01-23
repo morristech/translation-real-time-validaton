@@ -12,7 +12,6 @@ logger = logging.getLogger('notifier')
 def new_translation(req):
     data = yield from req.post()
     payload = json.loads(data['payload'])
-    print('got req with status {}'.format(payload['translation']['status']))
     if payload['translation']['status'] != 'status_unproofread':
         return web.Response()
 
@@ -36,8 +35,6 @@ def new_translation(req):
         user_email = user.get('email', 'tomek.kwiecien@gmail.com')
         mail_res = yield from mailer.send(mandrill_key, user_email, [error])
         status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
-    else:
-        print('no errors comparing:\n\n{}\n\n{}\n'.format(base, other))
 
     return web.Response()
 

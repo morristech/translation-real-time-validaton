@@ -65,5 +65,5 @@ def send(mandrill_key, user_email, diffs):
         'html': email_body,
         'to': [{'email': user_email,'type': 'to'}],
     }
-    print('sending email to {}'.format(user_email))
+    
     return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
