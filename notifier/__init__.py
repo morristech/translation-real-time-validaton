@@ -23,32 +23,35 @@ def new_translation(req):
 
     base = yield from translate.string(wti_key, locale, string_id)
     other = payload['translation']['text']
-    diff = yield from compare.diff(base.text, other)
+    error = yield from compare.diff(base.text, other)
 
-    if diff:
-        diff.base_path = 'Language: {}'.format(locale)
-        diff.other_path = 'Language: {}'.format(payload['locale'])
+    if error:
+        error.base_path = 'Language: {}'.format(locale)
+        error.other_path = 'Language: {}'.format(payload['locale'])
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
+        #TODO get email from users
         user_email = user.get('email', 'tomek.kwiecien@gmail.com')
-        yield from mailer.send(mandrill_key, user_email, diff)
+        yield from mailer.send(mandrill_key, user_email, [error])
         yield from translate.change_status(wti_key, payload['locale'], string_id, other)
 
     return web.Response()
 
 
 @asyncio.coroutine
-def all_translations(req):
-    api_key = req.GET['project_key']
+def project(req):
+    api_key = req.match_info['api_key']
     locales = yield from translate.locales(api_key)
     strings = yield from translate.strings(api_key)
+    errors = []
     for string in strings:
-        base = yield from translate.string(api_key, string.id, locales.source)
+        base = yield from translate.string(api_key, locales.source, string.id)
         for locale in locales.targets:
-            translation = yield from translate.string(api_key, string.id, locale)
-            diff = yield from compare.diff(base.text, translation.text)
-            if diff:
-                print(diff)
+            translation = yield from translate.string(api_key, locale, string.id)
+            error = yield from compare.diff(base.text, translation.text)
+            if error:
+                errors.append(error)
+    yield from mailer.send(mandrill_key, user_email, errors)
     return web.Response()
 
 
@@ -73,7 +76,7 @@ def main(global_config, **settings):
 
     logger.info('Initializing public api endpoints')
     app.router.add_route('GET', '/', healthcheck)
-    app.router.add_route('GET', '/translations', all_translations)
+    app.router.add_route('GET', '/projects/{api_key}', project)
     app.router.add_route('POST', '/translations', new_translation)
 
     return app

@@ -46,10 +46,10 @@ class TestNewTranslation(AsyncTestCase):
         self.assertFalse(mock_mailer.send.called)
 
 
-class TestAllTranslations(AsyncTestCase):
+class TestProject(AsyncTestCase):
 
     @patch('aiohttp.request')
-    def test_all_translations(self, mock_get):
+    def test_project(self, mock_get):
         req = MagicMock()
         req.GET = {'project_key': 'api_key'}
         res = MagicMock()
@@ -61,6 +61,6 @@ class TestAllTranslations(AsyncTestCase):
         ])
         mock_get.return_value = self.make_fut(res)
 
-        actual = self.coro(notifier.all_translations(req))
+        actual = self.coro(notifier.project(req))
 
         self.assertEqual(200, actual.status)

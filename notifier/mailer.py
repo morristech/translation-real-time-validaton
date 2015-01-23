@@ -3,7 +3,7 @@ import inlinestyler.utils as inline_styler
 import mandrill
 import asyncio
 
-email_template = """
+email_css = """
 <style type="text/css">
     table.diff {font-family:Courier; border:medium;}
     .diff_header {background-color:#e0e0e0}
@@ -14,6 +14,9 @@ email_template = """
     .diff_sub {background-color:#ffaaaa}
     table {width:100%;}
 </style>
+"""
+
+email_error = """
 <table class="diff" id="difflib_chg_to4__top"
        cellspacing="0" cellpadding="0" rules="groups" width="600">
     <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
@@ -39,8 +42,8 @@ def _append_content(soup, tag_id, content):
     return soup
 
 
-def _fill_template(diff):
-    email_soup = BeautifulSoup(email_template)
+def _fill_error(diff):
+    email_soup = BeautifulSoup(email_error)
     email_soup = _append_content(email_soup, 'left_path', diff.base_path)
     email_soup = _append_content(email_soup, 'right_path', diff.other_path)
     email_soup = _append_content(email_soup, 'left_html', BeautifulSoup(diff.base).body)
@@ -50,18 +53,16 @@ def _fill_template(diff):
 
 
 @asyncio.coroutine
-def send(mandrill_key, user_email, diff):
+def send(mandrill_key, user_email, diffs):
     mandrill_client = mandrill.Mandrill(mandrill_key)
-    email = inline_styler.inline_css(_fill_template(diff))
+    template = '\n<hr>\n'.join(_fill_error(diff) for diff in diffs)
+    email = inline_styler.inline_css(email_css + template)
     message = {
         'from_email': 'message.from_email@example.com',
-        'from_name': 'Example Name',
-        'headers': {'Reply-To': 'message.reply@example.com'},
-        'subject': 'example subject',
+        'from_name': 'KeepSafe Translation Verifier',
+        'subject': 'Translations not passing the validation test',
         'html': email,
-        'to': [{'email': user_email,
-             'name': 'Recipient Name',
-             'type': 'to'}],
+        'to': [{'email': user_email,'type': 'to'}],
     }
 
     mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')

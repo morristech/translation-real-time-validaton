@@ -20,7 +20,7 @@ def string(api_key, locale, string_id):
     url = translation_url_pattern.format(api_key=api_key, locale=locale, string_id=string_id)
     res = yield from aiohttp.request('get', url)
     data = yield from res.json()
-    return Translation(id=string_id, locale=locale, text=data['text'])
+    return Translation(id=string_id, locale=locale, text=data.get('text', ''))
 
 
 def strings(api_key):
