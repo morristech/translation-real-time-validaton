@@ -23,6 +23,7 @@ email_error = """
     <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
 
     <thead>
+    <tr><td width="100%" id="file_path" colspan="2"></td></tr>
     <tr><td width="50%" id="left_path"></td><td width="50%" id="right_path"></td></tr>
     </thead>
 
@@ -44,6 +45,7 @@ def _append_content(soup, tag_id, content):
 
 def _fill_error(diff):
     email_soup = BeautifulSoup(email_error)
+    email_soup = _append_content(email_soup, 'file_path', diff.file_path)
     email_soup = _append_content(email_soup, 'left_path', diff.base_path)
     email_soup = _append_content(email_soup, 'right_path', diff.other_path)
     email_soup = _append_content(email_soup, 'left_html', BeautifulSoup(diff.base).body)
@@ -51,18 +53,17 @@ def _fill_error(diff):
     email_soup = _append_content(email_soup, 'md_diff', BeautifulSoup(diff.diff).body)
     return email_soup.prettify()
 
-
 @asyncio.coroutine
 def send(mandrill_key, user_email, diffs):
     mandrill_client = mandrill.Mandrill(mandrill_key)
     template = '\n<hr>\n'.join(_fill_error(diff) for diff in diffs)
-    email = inline_styler.inline_css(email_css + template)
+    email_body = inline_styler.inline_css(email_css + template)
     message = {
         'from_email': 'message.from_email@example.com',
         'from_name': 'KeepSafe Translation Verifier',
         'subject': 'Translations not passing the validation test',
-        'html': email,
+        'html': email_body,
         'to': [{'email': user_email,'type': 'to'}],
     }
-
-    mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
+    print('sending email to {}'.format(user_email))
+    return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')

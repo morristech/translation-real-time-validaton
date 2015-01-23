@@ -12,7 +12,7 @@ logger = logging.getLogger('notifier')
 def new_translation(req):
     data = yield from req.post()
     payload = json.loads(data['payload'])
-
+    print('got req with status {}'.format(payload['translation']['status']))
     if payload['translation']['status'] != 'status_unproofread':
         return web.Response()
 
@@ -21,19 +21,23 @@ def new_translation(req):
     wti_key = req.app[const.WTI_KEY]
     mandrill_key = req.app[const.MANDRILL_KEY]
 
-    base = yield from translate.string(wti_key, locale, string_id)
+    base_string = yield from translate.string(wti_key, locale, string_id)
+    base = base_string.text
     other = payload['translation']['text']
-    error = yield from compare.diff(base.text, other)
+    error = yield from compare.diff(base, other)
 
     if error:
+        error.file_path = 'File: {} Segment: {}'.format('TODO here', 'and here')
         error.base_path = 'Language: {}'.format(locale)
         error.other_path = 'Language: {}'.format(payload['locale'])
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
         #TODO get email from users
         user_email = user.get('email', 'tomek.kwiecien@gmail.com')
-        yield from mailer.send(mandrill_key, user_email, [error])
-        yield from translate.change_status(wti_key, payload['locale'], string_id, other)
+        mail_res = yield from mailer.send(mandrill_key, user_email, [error])
+        status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
+    else:
+        print('no errors comparing:\n\n{}\n\n{}\n'.format(base, other))
 
     return web.Response()
 
@@ -75,7 +79,7 @@ def main(global_config, **settings):
     app[const.MANDRILL_KEY] = mandrill_key
 
     logger.info('Initializing public api endpoints')
-    app.router.add_route('GET', '/', healthcheck)
+    app.router.add_route('GET', '/healthcheck', healthcheck)
     app.router.add_route('GET', '/projects/{api_key}', project)
     app.router.add_route('POST', '/translations', new_translation)
 

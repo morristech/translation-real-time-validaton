@@ -46,10 +46,13 @@ def change_status(api_key, locale, string_id, text, status='status_unverified'):
         'status': status,
         'minor_change': False
     })
+    headers = {'content-type': 'application/json'}
     url = status_url_pattern.format(api_key=api_key, locale=locale, string_id=string_id)
-    res = yield from aiohttp.request('post', url, data=message)
-
-    return res.status == 202
+    print('sending {} to {}'.format(message, url))
+    try:
+        return (yield from asyncio.wait_for(aiohttp.request('post', url, data=message, headers=headers), 5))
+    except asyncio.TimeoutError:
+        logging.error('Request to {} took more then 5s to finish, dropping'.format(url))
 
 
 def locales(api_key):
