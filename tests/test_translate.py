@@ -34,17 +34,17 @@ class TestTranslate(AsyncTestCase):
     @patch('aiohttp.request')
     def test_user_happy_path(self, mock_get):
         mock_json = MagicMock()
-        mock_json.json.return_value = self.make_fut([{'id': 1, 'name': 'test1'}, {'id': 2, 'name': 'test2'}])
+        mock_json.json.return_value = self.make_fut([{'user_id': 1, 'name': 'test1'}, {'user_id': 2, 'name': 'test2'}])
         mock_get.return_value = self.make_fut(mock_json)
 
         actual = self.coro(translate.user('key', 2))
 
-        self.assertEqual({'id': 2, 'name': 'test2'}, actual)
+        self.assertEqual({'user_id': 2, 'name': 'test2'}, actual)
 
     @patch('aiohttp.request')
     def test_user_return_empty_dict_if_missing(self, mock_get):
         mock_json = MagicMock()
-        mock_json.json.return_value = self.make_fut([{'id': 1, 'name': 'test1'}, {'id': 2, 'name': 'test2'}])
+        mock_json.json.return_value = self.make_fut([{'user_id': 1, 'name': 'test1'}, {'user_id': 2, 'name': 'test2'}])
         mock_get.return_value = self.make_fut(mock_json)
 
         actual = self.coro(translate.user('key', 3))

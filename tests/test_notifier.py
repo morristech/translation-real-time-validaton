@@ -30,14 +30,15 @@ class TestNewTranslation(AsyncTestCase):
         req.app = {
             const.MASTER_LOCALE: 'en',
             const.WTI_KEY: 'wti_key',
-            const.MANDRILL_KEY: 'mandrill_key'
+            const.MANDRILL_KEY: 'mandrill_key',
+            const.ASYNC_WORKER: MagicMock()
         }
         mock_json = MagicMock()
         mock_json.json.return_value = self.make_fut({
             'text': '#bbbb'
         })
         mock_users = MagicMock()
-        mock_users.json.return_value = self.make_fut([{'id': 123, 'email': 'test@test.com'}])
+        mock_users.json.return_value = self.make_fut([{'user_id': 19362, 'email': 'test@test.com'}])
         mock_get.side_effect = iter([self.make_fut(mock_json), self.make_fut(mock_users)])
 
         res = self.coro(notifier.new_translation(req))

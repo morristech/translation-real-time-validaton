@@ -6,6 +6,7 @@ from aiohttp import web
 from . import const, tasks, worker
 
 logger = logging.getLogger('notifier')
+logging.basicConfig(level=logging.DEBUG)
 
 
 @asyncio.coroutine
@@ -20,7 +21,7 @@ def new_translation(req):
     wti_key = req.app[const.WTI_KEY]
     mandrill_key = req.app[const.MANDRILL_KEY]
 
-    req.app.worker.start(tasks.compare_with_master, wti_key, locale, string_id, mandrill_key, payload)
+    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, locale, string_id, mandrill_key, payload)
     return web.Response()
 
 
@@ -28,7 +29,7 @@ def new_translation(req):
 def project(req):
     api_key = req.match_info['api_key']
     mandrill_key = req.app[const.MANDRILL_KEY]
-    req.app.worker.start(tasks.validate_project, api_key, mandrill_key)
+    req.app[const.ASYNC_WORKER].start(tasks.validate_project, api_key, mandrill_key)
     return web.Response()
 
 
@@ -43,13 +44,13 @@ def main(global_config, **settings):
     loop.set_debug(False)
 
     app = web.Application(logger=logger, loop=loop)
-    app.worker = worker.Worker(loop)
+    app[const.ASYNC_WORKER] = worker.Worker(loop)
 
     master_locale = settings.get('srv.locale', 'en-US')
     app[const.MASTER_LOCALE] = master_locale
-    wti_key = settings.get('srv.wti', 'EIEThAR3Dt_JQCOyMa4awA')
+    wti_key = settings.get('srv.wti')
     app[const.WTI_KEY] = wti_key
-    mandrill_key = settings.get('srv.mandrill', 'HW5VKp-p1Gk7GV12iwrwNQ')
+    mandrill_key = settings.get('srv.mandrill')
     app[const.MANDRILL_KEY] = mandrill_key
 
     logger.info('Initializing public api endpoints')

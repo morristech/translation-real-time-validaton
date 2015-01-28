@@ -17,8 +17,7 @@ def compare_with_master(wti_key, locale, string_id, mandrill_key, payload):
         error.other_path = 'Language: {}'.format(payload['locale'])
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
-        #TODO get email from users
-        user_email = user.get('email', 'tomek.kwiecien@gmail.com')
+        user_email = user.get('email')
         mail_res = yield from mailer.send(mandrill_key, user_email, [error])
         status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
 

@@ -1,9 +1,12 @@
 import aiohttp
 import asyncio
 import json
+import logging
 from parse import parse
 from functools import partial
 from collections import namedtuple
+
+logger = logging.getLogger('notifier')
 
 translation_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings/{string_id}/locales/{locale}/translations.json'
 users_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/users.json'
@@ -35,7 +38,7 @@ def user(api_key, user_id):
     res = yield from aiohttp.request('get', url)
     users = yield from res.json()
     for user in users:
-        if user['id'] == user_id:
+        if user['user_id'] == user_id:
             return user
     return {}
 
@@ -49,9 +52,11 @@ def change_status(api_key, locale, string_id, text, status='status_unverified'):
     headers = {'content-type': 'application/json'}
     url = status_url_pattern.format(api_key=api_key, locale=locale, string_id=string_id)
     try:
-        return (yield from asyncio.wait_for(aiohttp.request('post', url, data=message, headers=headers), 5))
+        res = yield from asyncio.wait_for(aiohttp.request('post', url, data=message, headers=headers), 10)
+        return res.status == 202
     except asyncio.TimeoutError:
         logging.error('Request to {} took more then 5s to finish, dropping'.format(url))
+    return False
 
 
 def locales(api_key):
