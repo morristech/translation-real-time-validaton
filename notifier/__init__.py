@@ -49,8 +49,12 @@ def main(global_config, **settings):
     master_locale = settings.get('srv.locale', 'en-US')
     app[const.MASTER_LOCALE] = master_locale
     wti_key = settings.get('srv.wti')
+    if wti_key == None:
+        raise ValueError('wti key is missing')
     app[const.WTI_KEY] = wti_key
     mandrill_key = settings.get('srv.mandrill')
+    if wti_key == None:
+        raise ValueError('mandrill key is missing')
     app[const.MANDRILL_KEY] = mandrill_key
 
     logger.info('Initializing public api endpoints')
