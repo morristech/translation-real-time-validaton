@@ -52,7 +52,8 @@ class TestProject(AsyncTestCase):
     @patch('aiohttp.request')
     def test_project(self, mock_get):
         req = MagicMock()
-        req.GET = {'project_key': 'api_key'}
+        req.post.return_value = self.make_fut({'email': 'test@test.com'})
+        req.match_info = {'api_key': 'key'}
         res = MagicMock()
         res.json.side_effect = iter([
             self.make_fut(read('project.json')),
