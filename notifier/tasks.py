@@ -23,7 +23,7 @@ def compare_with_master(wti_key, locale, string_id, mandrill_key, payload):
 
 
 @asyncio.coroutine
-def validate_project(api_key, mandrill_key):
+def validate_project(api_key, mandrill_key, user_email):
     locales = yield from translate.locales(api_key)
     strings = yield from translate.strings(api_key)
     errors = []

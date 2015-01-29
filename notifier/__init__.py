@@ -28,8 +28,12 @@ def new_translation(req):
 @asyncio.coroutine
 def project(req):
     api_key = req.match_info['api_key']
+    params = yield from req.post()
+    user_email = params['email']
     mandrill_key = req.app[const.MANDRILL_KEY]
-    req.app[const.ASYNC_WORKER].start(tasks.validate_project, api_key, mandrill_key)
+
+    req.app[const.ASYNC_WORKER].start(tasks.validate_project, api_key, mandrill_key, user_email)
+    
     return web.Response()
 
 
@@ -59,7 +63,7 @@ def main(global_config, **settings):
 
     logger.info('Initializing public api endpoints')
     app.router.add_route('GET', '/healthcheck', healthcheck)
-    app.router.add_route('GET', '/projects/{api_key}', project)
+    app.router.add_route('POST', '/projects/{api_key}', project)
     app.router.add_route('POST', '/translations', new_translation)
 
     return app

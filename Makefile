@@ -10,20 +10,13 @@ FLAGS=
 
 
 update:
-	$(PIP) install -e git+git@github.com:KeepSafe/aiohttp.git#egg=aiohttp
-	$(PIP) install -e git+git@github.com:KeepSafe/libks.git#egg=libks
 	$(PYTHON) ./setup.py develop
 
 devupdate:
-	$(PIP) install -e git+git@github.com:KeepSafe/aiohttp.git#egg=aiohttp
-	$(PIP) install -e git+git@github.com:KeepSafe/libks.git#egg=libks
 	$(PYTHON) ./setup.py develop
 
 env:
 	python3.4 -m venv venv
-	$(PIP) install https://s3.amazonaws.com/com.keepsafe.python-packages/Routes-1.13.1.tar.gz#md5=1876f57e5757cc6f1473be067125991a
-	$(PIP) install https://s3.amazonaws.com/com.keepsafe.python-packages/aiohttp-0.12.0b1.tar.gz
-	$(PIP) install -e git+git@github.com:KeepSafe/libks.git#egg=libks
 	$(PYTHON) ./setup.py develop
 
 dev:
