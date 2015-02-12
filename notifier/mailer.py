@@ -33,6 +33,8 @@ email_error = """
 </table>
 
 <div id="md_diff"></div>
+
+<a id="section_link" href="" target="_blank">Go to section</a>
 """
 
 
@@ -51,6 +53,11 @@ def _fill_error(diff):
     email_soup = _append_content(email_soup, 'left_html', BeautifulSoup(diff.base).body)
     email_soup = _append_content(email_soup, 'right_html', BeautifulSoup(diff.other).body)
     email_soup = _append_content(email_soup, 'md_diff', BeautifulSoup(diff.diff).body)
+
+    tag = email_soup.select('#section_link')
+    if tag:
+        tag['href'] = diff.section_link
+
     return email_soup.prettify()
 
 @asyncio.coroutine

@@ -20,7 +20,7 @@ def new_translation(req):
     wti_key = req.app[const.WTI_KEY]
     mandrill_key = req.app[const.MANDRILL_KEY]
 
-    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, string_id, mandrill_key, payload)
+    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mandrill_key, string_id, payload)
     return web.Response()
 
 

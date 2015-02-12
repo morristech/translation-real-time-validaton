@@ -15,7 +15,7 @@ project_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}.json'
 strings_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings.json'
 
 Locales = namedtuple('Locales', ['source', 'targets'])
-Project = namedtuple('Project', ['locales', 'files'])
+Project = namedtuple('Project', ['locales', 'files', 'name', 'id'])
 String = namedtuple('String', ['id', 'file_id'])
 Translation = namedtuple('Translation', ['id', 'locale', 'text'])
 
@@ -71,5 +71,7 @@ def project(api_key):
     locales = Locales(source=source, targets=targets)
 
     files = project_data.get('project_files', [])
+    project_name = project_data.get('name')
+    project_id = project_data.get('id')
 
-    return Project(locales=locales, files=files)
+    return Project(locales=locales, files=files, name=project_name, id=project_id)
