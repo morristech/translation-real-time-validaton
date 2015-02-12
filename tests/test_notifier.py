@@ -1,6 +1,6 @@
 import os
 import notifier
-from notifier import const
+from notifier import const, worker
 import json
 from unittest.mock import MagicMock, patch
 
@@ -22,29 +22,44 @@ class TestHealthcheck(AsyncTestCase):
 
 class TestNewTranslation(AsyncTestCase):
 
-    @patch('aiohttp.request')
-    @patch('notifier.mailer')
-    def test_new_translation(self, mock_mailer, mock_get):
+    def _test(self, mock_get, text):
         req = MagicMock()
         req.post.return_value = self.make_fut(read('wti_hook.json'))
         req.app = {
-            const.MASTER_LOCALE: 'en',
             const.WTI_KEY: 'wti_key',
             const.MANDRILL_KEY: 'mandrill_key',
-            const.ASYNC_WORKER: MagicMock()
+            const.ASYNC_WORKER: worker.Worker(self.loop)
         }
-        mock_json = MagicMock()
-        mock_json.json.return_value = self.make_fut({
-            'text': '#bbbb'
-        })
-        mock_users = MagicMock()
-        mock_users.json.return_value = self.make_fut([{'user_id': 19362, 'email': 'test@test.com'}])
-        mock_get.side_effect = iter([self.make_fut(mock_json), self.make_fut(mock_users)])
 
-        res = self.coro(notifier.new_translation(req))
+        mock_res = MagicMock()
+        mock_res.json.side_effect = iter([
+            self.make_fut(read('project.json')),
+            self.make_fut({'text': text}),
+            self.make_fut([{'user_id': 1, 'email': 'test@test.com'}]),
+        ])
+        mock_get.return_value = self.make_fut(mock_res)
+
+        return self.coro(notifier.new_translation(req))
+
+    @patch('aiohttp.request')
+    @patch('notifier.mailer')
+    @patch('notifier.tasks.translate.change_status')
+    def test_success(self, mock_status, mock_mailer, mock_get):
+        res = self._test(mock_get, '#bbbb')
 
         self.assertEqual(200, res.status)
         self.assertFalse(mock_mailer.send.called)
+        self.assertFalse(mock_status.called)
+
+    @patch('aiohttp.request')
+    @patch('notifier.tasks.mailer')
+    @patch('notifier.tasks.translate.change_status')
+    def test_fail(self, mock_status, mock_mailer, mock_get):
+        res = self._test(mock_get, '##bbbb')
+
+        self.assertEqual(200, res.status)
+        self.assertTrue(mock_mailer.send.called)
+        self.assertTrue(mock_status.called)
 
 
 class TestProject(AsyncTestCase):

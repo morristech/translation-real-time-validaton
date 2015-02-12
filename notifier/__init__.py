@@ -17,11 +17,10 @@ def new_translation(req):
         return web.Response()
 
     string_id = payload['string_id']
-    locale = req.app[const.MASTER_LOCALE]
     wti_key = req.app[const.WTI_KEY]
     mandrill_key = req.app[const.MANDRILL_KEY]
 
-    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, locale, string_id, mandrill_key, payload)
+    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, string_id, mandrill_key, payload)
     return web.Response()
 
 
@@ -33,7 +32,7 @@ def project(req):
     mandrill_key = req.app[const.MANDRILL_KEY]
 
     req.app[const.ASYNC_WORKER].start(tasks.validate_project, api_key, mandrill_key, user_email)
-    
+
     return web.Response()
 
 
@@ -50,8 +49,6 @@ def main(global_config, **settings):
     app = web.Application(logger=logger, loop=loop)
     app[const.ASYNC_WORKER] = worker.Worker(loop)
 
-    master_locale = settings.get('srv.locale', 'en-US')
-    app[const.MASTER_LOCALE] = master_locale
     wti_key = settings.get('srv.wti')
     if wti_key == None:
         raise ValueError('wti key is missing')
