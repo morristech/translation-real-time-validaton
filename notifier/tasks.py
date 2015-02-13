@@ -36,7 +36,8 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
         user_email = user.get('email')
-        mail_res = yield from mailer.send(mandrill_key, user_email, [error])
+        topic = 'Translations not passing the validation test - file {}, language {}, string_id {}'.format(filename, other_locale, string_id)
+        mail_res = yield from mailer.send(mandrill_key, user_email, [error], topic)
         status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
 
 

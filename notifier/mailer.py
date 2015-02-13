@@ -61,14 +61,14 @@ def _fill_error(diff):
     return email_soup.prettify()
 
 @asyncio.coroutine
-def send(mandrill_key, user_email, diffs):
+def send(mandrill_key, user_email, diffs, topic=None):
     mandrill_client = mandrill.Mandrill(mandrill_key)
     template = '\n<hr>\n'.join(_fill_error(diff) for diff in diffs)
     email_body = inline_styler.inline_css(email_css + template)
     message = {
         'from_email': 'message.from_email@example.com',
         'from_name': 'KeepSafe Translation Verifier',
-        'subject': 'Translations not passing the validation test',
+        'subject': topic or 'Translations not passing the validation test',
         'html': email_body,
         'to': [{'email': user_email,'type': 'to'}],
     }
