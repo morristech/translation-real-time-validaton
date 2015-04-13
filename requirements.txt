@@ -10,3 +10,4 @@ mandrill==1.0.57
 nose==1.3.4
 parse==1.6.6
 requests==2.5.1
+inlinestyler==0.2.0
