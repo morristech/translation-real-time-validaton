@@ -19,13 +19,12 @@ logging.getLogger('aiohttp').addHandler(accessHlr)
 def new_translation(req):
     data = yield from req.post()
     payload = json.loads(data['payload'])
-    if payload['translation']['status'] != 'status_unproofread':
+    if payload['translation']['status'] != 'status_proofread':
         return web.Response()
 
     string_id = payload['string_id']
     wti_key = req.app[const.WTI_KEY]
     mandrill_key = req.app[const.MANDRILL_KEY]
-
     req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mandrill_key, string_id, payload)
     return web.Response()
 
@@ -55,11 +54,11 @@ def main(global_config, **settings):
     app = web.Application(logger=logger, loop=loop)
     app[const.ASYNC_WORKER] = worker.Worker(loop)
 
-    wti_key = settings.get('srv.wti')
+    wti_key = settings.get('wti')
     if wti_key == None:
         raise ValueError('wti key is missing')
     app[const.WTI_KEY] = wti_key
-    mandrill_key = settings.get('srv.mandrill')
+    mandrill_key = settings.get('mandrill')
     if wti_key == None:
         raise ValueError('mandrill key is missing')
     app[const.MANDRILL_KEY] = mandrill_key

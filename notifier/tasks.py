@@ -1,12 +1,16 @@
 import asyncio
 import aiohttp
 import logging
+from collections import namedtuple
 
 from . import translate, compare, mailer
 
 
 PROJECT_URL = 'https://webtranslateit.com/api/projects/{}.json'
 SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name}/locales/{master_locale}..{other_locale}/strings/{string_id}'
+
+
+Error = namedtuple('Error', ['base', 'other', 'diff', 'section_link', 'file_path', 'base_path', 'other_path'])
 
 
 def filter_filename(files, file_id):
@@ -25,14 +29,19 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
     base_string = yield from translate.string(wti_key, master_locale, string_id)
     base = base_string.text
     other = payload['translation']['text']
-    error = yield from compare.diff(base, other)
-    if error:
+    diff = yield from compare.diff(base, other)
+    if diff:
         other_locale = payload['locale']
         filename = filter_filename(project.files, payload['file_id'])
-        error.file_path = 'File: {}'.format(filename)
-        error.base_path = 'Language: {}'.format(master_locale)
-        error.other_path = 'Language: {}'.format(other_locale)
-        error.section_link = SECTION_URL.format(project_id=project.id, project_name=project.name, master_locale=master_locale, other_locale=other_locale, string_id=payload['string_id'])
+        error = Error(
+            base=base,
+            other=other,
+            diff=diff,
+            section_link=SECTION_URL.format(project_id=project.id, project_name=project.name, master_locale=master_locale, other_locale=other_locale, string_id=payload['string_id']),
+            file_path='File: {}'.format(filename),
+            base_path='Language: {}'.format(master_locale),
+            other_path='Language: {}'.format(other_locale)
+        )
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
         user_email = user.get('email')
