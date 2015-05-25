@@ -9,9 +9,9 @@ from . import const, tasks, worker
 logger = logging.getLogger('notifier')
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('asyncio').setLevel(logging.ERROR)
-hlr = logging.handlers.RotatingFileHandler('notifier.log', maxBytes=10000000)
+hlr = logging.handlers.RotatingFileHandler('var/log/translation-validator.log', maxBytes=10000000)
 logger.addHandler(hlr)
-accessHlr = logging.handlers.RotatingFileHandler('access.log', maxBytes=10000000)
+accessHlr = logging.handlers.RotatingFileHandler('var/log/translation-validator_access.log', maxBytes=10000000)
 logging.getLogger('aiohttp').addHandler(accessHlr)
 
 
