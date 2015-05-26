@@ -2,17 +2,17 @@ import logging
 import logging.handlers
 import asyncio
 import json
-from aiohttp import web
+from aiohttp import web, log
 
 from . import const, tasks, worker
 
-logger = logging.getLogger('notifier')
-logging.basicConfig(level=logging.DEBUG)
+logger = log.web_logger
 logging.getLogger('asyncio').setLevel(logging.ERROR)
-hlr = logging.handlers.RotatingFileHandler('var/log/translation-validator.log', maxBytes=10000000)
+hlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator.log', maxBytes=10000000)
 logger.addHandler(hlr)
-accessHlr = logging.handlers.RotatingFileHandler('var/log/translation-validator_access.log', maxBytes=10000000)
-logging.getLogger('aiohttp').addHandler(accessHlr)
+accessHlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator_access.log', maxBytes=10000000)
+log.access_logger.addHandler(accessHlr)
+log.access_logger.setLevel(logging.INFO)
 
 
 @asyncio.coroutine

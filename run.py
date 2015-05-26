@@ -1,6 +1,7 @@
 import asyncio
 import notifier
 import configparser
+from aiohttp import log
 
 
 def read_keys():
@@ -11,7 +12,7 @@ def read_keys():
 
 keys = read_keys()
 app = notifier.main({}, **keys)
-f = app.loop.create_server(app.make_handler(), '0.0.0.0', 5001)
+f = app.loop.create_server(app.make_handler(access_log=log.access_logger), '0.0.0.0', 5001)
 srv = app.loop.run_until_complete(f)
 print('serving on', srv.sockets[0].getsockname())
 try:
