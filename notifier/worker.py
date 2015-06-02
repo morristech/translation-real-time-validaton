@@ -1,10 +1,18 @@
 import asyncio
-import aiohttp
-import logging
+from aiohttp import log
 
 from . import const
 
-logger = logging.getLogger('notifier')
+logger = log.web_logger
+
+
+@asyncio.coroutine
+def handle_exception(task, args):
+    try:
+        result = yield from task(*args)
+        return result
+    except Exception:
+        logger.exception()
 
 
 class Worker(object):
@@ -13,4 +21,4 @@ class Worker(object):
         self.loop = loop
 
     def start(self, task, *args):
-        task = asyncio.async(task(*args))
+        result = asyncio.async(handle_exception(args))
