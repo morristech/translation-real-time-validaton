@@ -7,19 +7,17 @@ from aiohttp import web, log
 from . import const, tasks, worker
 
 logger = log.web_logger
-logging.getLogger('asyncio').setLevel(logging.ERROR)
-hlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator.log', maxBytes=10000000)
-logger.addHandler(hlr)
-accessHlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator_access.log', maxBytes=10000000)
-log.access_logger.addHandler(accessHlr)
-log.access_logger.setLevel(logging.INFO)
+logger.setLevel(logging.INFO)
 
 
 @asyncio.coroutine
 def new_translation(req):
     data = yield from req.post()
+    if 'payload' not in data:
+        return web.HTTPBadRequest()
     payload = json.loads(data['payload'])
-    if payload['translation']['status'] != 'status_proofread':
+    translation = payload.get('translation')
+    if translation == None or translation.get('status') != 'status_proofread':
         return web.Response()
 
     string_id = payload['string_id']

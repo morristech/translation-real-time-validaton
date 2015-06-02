@@ -1,7 +1,7 @@
 import asyncio
-import aiohttp
 import logging
 from collections import namedtuple
+from aiohttp import log
 
 from . import translate, compare, mailer
 
@@ -11,12 +11,12 @@ SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name
 
 
 Error = namedtuple('Error', ['base', 'other', 'diff', 'section_link', 'file_path', 'base_path', 'other_path'])
-
+logger = log.web_logger
 
 def filter_filename(files, file_id):
     filtered_files = list(filter(lambda f: f['id'] == file_id, files))
     if not filtered_files:
-        logging.error('No file could be found for id {} in project files {}'.format(file_id, files))
+        logger.error('No file could be found for id {} in project files {}'.format(file_id, files))
         return ''
     return filtered_files[0].get('name')
 
@@ -46,8 +46,8 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
         user = yield from translate.user(wti_key, user_id)
         user_email = user.get('email')
         topic = 'Translations not passing the validation test - file {}, language {}, string_id {}'.format(filename, other_locale, string_id)
-        mail_res = yield from mailer.send(mandrill_key, user_email, [error], topic)
         status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
+        mail_res = yield from mailer.send(mandrill_key, user_email, [error], topic)
 
 
 @asyncio.coroutine

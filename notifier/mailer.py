@@ -56,7 +56,7 @@ def _fill_error(diff):
 
     tag = email_soup.select('#section_link')
     if tag:
-        tag['href'] = diff.section_link
+        tag[0]['href'] = diff.section_link
 
     return email_soup.prettify()
 

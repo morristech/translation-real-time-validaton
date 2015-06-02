@@ -42,27 +42,23 @@ class TestNewTranslation(AsyncTestCase):
         return self.coro(notifier.new_translation(req))
 
     @patch('aiohttp.request')
-    @patch('notifier.mailer')
+    @patch('notifier.mailer.send')
     @patch('notifier.tasks.translate.change_status')
     def test_success(self, mock_status, mock_mailer, mock_get):
-        res = self._test(mock_get, '''##PIN timeout
-Do you go in and out of KeepSafe frequently? [Premium makes this safer and faster](http://support.getkeepsafe.com/hc/articles/204056310).
-
-Activate PIN timeout and KeepSafe stays unlocked for 30 seconds after you leave the app. If you come back within that time, you won’t have to enter your PIN.
-''')
+        res = self._test(mock_get, '#aaaaa')
 
         self.assertEqual(200, res.status)
-        self.assertFalse(mock_mailer.send.called)
+        self.assertFalse(mock_mailer.called)
         self.assertFalse(mock_status.called)
 
     @patch('aiohttp.request')
-    @patch('notifier.tasks.mailer')
+    @patch('notifier.tasks.mailer.send')
     @patch('notifier.tasks.translate.change_status')
     def test_fail(self, mock_status, mock_mailer, mock_get):
         res = self._test(mock_get, '##bbbb')
 
         self.assertEqual(200, res.status)
-        self.assertTrue(mock_mailer.send.called)
+        self.assertTrue(mock_mailer.called)
         self.assertTrue(mock_status.called)
 
 
