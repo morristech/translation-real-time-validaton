@@ -16,7 +16,7 @@ devupdate:
 	$(PYTHON) ./setup.py develop
 
 env:
-	python3.4 -m venv venv
+	virtualenv -p python3 venv
 	$(PYTHON) ./setup.py develop
 
 dev:
