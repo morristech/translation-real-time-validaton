@@ -2,7 +2,16 @@ import asyncio
 import notifier
 import configparser
 import logging
+import socket
 from aiohttp import log
+
+
+class ContextFilter(logging.Filter):
+  hostname = socket.gethostname()
+
+  def filter(self, record):
+    record.hostname = ContextFilter.hostname
+    return True
 
 
 def read_keys():
@@ -11,6 +20,9 @@ def read_keys():
     return dict(config[config.default_section])
 
 logger = log.web_logger
+
+f = ContextFilter()
+logger.addFilter(f)
 
 logging.getLogger('asyncio').setLevel(logging.ERROR)
 log.access_logger.setLevel(logging.INFO)
