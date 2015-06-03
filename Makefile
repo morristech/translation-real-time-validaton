@@ -16,7 +16,7 @@ devupdate:
 
 env:
 	virtualenv -p python3 venv
-	$(PYTHON) ./setup.py develop
+	$(PIP) install -r requirements.txt
 
 dev:
 	$(PIP) install flake8 nose coverage requests
