@@ -1,7 +1,6 @@
 # Some simple testing tasks (sorry, UNIX only).
 
 PYTHON=venv/bin/python3.4
-PSERVE=venv/bin/gunicorn --paste
 PIP=venv/bin/pip
 EI=venv/bin/easy_install
 NOSE=venv/bin/nosetests
@@ -24,7 +23,7 @@ dev:
 	$(PYTHON) ./setup.py develop
 
 run:
-	$(PSERVE) ./etc/local.ini
+	$(PYTHON) run.py
 
 flake:
 	$(FLAKE) --exclude=./venv ./
