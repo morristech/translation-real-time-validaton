@@ -21,4 +21,4 @@ class Worker(object):
         self.loop = loop
 
     def start(self, task, *args):
-        result = asyncio.async(handle_exception(args))
+        result = asyncio.async(handle_exception(task, args))
