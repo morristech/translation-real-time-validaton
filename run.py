@@ -27,16 +27,17 @@ logger.addFilter(f)
 logging.getLogger('asyncio').setLevel(logging.ERROR)
 log.access_logger.setLevel(logging.INFO)
 
-hlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator.log', maxBytes=10000000)
-logger.addHandler(hlr)
-
 syslog = logging.handlers.SysLogHandler(address=('logs.papertrailapp.com', 36172))
 formatter = logging.Formatter('%(asctime)s %(hostname)s TRANSLATION-VALIDATOR %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
 syslog.setFormatter(formatter)
+
+hlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator.log', maxBytes=10000000)
+logger.addHandler(hlr)
 logger.addHandler(syslog)
 
 accessHlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator_access.log', maxBytes=10000000)
 log.access_logger.addHandler(accessHlr)
+log.access_logger.addHandler(syslog)
 
 keys = read_keys()
 app = notifier.main({}, **keys)
