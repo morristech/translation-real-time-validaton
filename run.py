@@ -23,6 +23,7 @@ logger = log.web_logger
 
 f = ContextFilter()
 logger.addFilter(f)
+log.access_logger.addFilter(f)
 
 logging.getLogger('asyncio').setLevel(logging.ERROR)
 log.access_logger.setLevel(logging.INFO)
