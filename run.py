@@ -14,10 +14,13 @@ class ContextFilter(logging.Filter):
     return True
 
 
-def read_keys():
+def read_settings():
     config = configparser.ConfigParser()
     config.read('srv.ini')
-    return dict(config[config.default_section])
+    settings = dict(config['APPS'])
+    wti_keys = dict(config['WTI_APPS'])
+    settings['wti_keys'] = wti_keys
+    return settings
 
 logger = log.web_logger
 
@@ -31,17 +34,17 @@ log.access_logger.setLevel(logging.INFO)
 syslog = logging.handlers.SysLogHandler(address=('logs.papertrailapp.com', 36172))
 formatter = logging.Formatter('%(asctime)s %(hostname)s TRANSLATION-VALIDATOR %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
 syslog.setFormatter(formatter)
-
-hlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator.log', maxBytes=10000000)
-logger.addHandler(hlr)
 logger.addHandler(syslog)
-
-accessHlr = logging.handlers.RotatingFileHandler('/var/log/translation-validator_access.log', maxBytes=10000000)
-log.access_logger.addHandler(accessHlr)
 log.access_logger.addHandler(syslog)
 
-keys = read_keys()
-app = notifier.main({}, **keys)
+hlr = logging.handlers.RotatingFileHandler('translation-validator.log', maxBytes=10000000)
+logger.addHandler(hlr)
+
+accessHlr = logging.handlers.RotatingFileHandler('translation-validator_access.log', maxBytes=10000000)
+log.access_logger.addHandler(accessHlr)
+
+settings = read_settings()
+app = notifier.main({}, **settings)
 f = app.loop.create_server(app.make_handler(access_log=log.access_logger), '0.0.0.0', 5001)
 srv = app.loop.run_until_complete(f)
 print('serving on', srv.sockets[0].getsockname())

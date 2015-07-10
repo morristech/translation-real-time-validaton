@@ -65,7 +65,7 @@ class TestTranslate(AsyncTestCase):
         self.assertEqual('https://webtranslateit.com/api/projects/key/strings/locale/locales/3/translations', url)
         self.assertTrue('data' in named)
 
-    def _test_project(self, mock_get):
+    def _test_project(self, mock_get, res_status=200):
         data = {
             'project': {
                 'source_locale': {'code': 'en-US'},
@@ -74,6 +74,7 @@ class TestTranslate(AsyncTestCase):
             }
         }
         mock_res = MagicMock()
+        mock_res.status = res_status
         mock_res.json.return_value = self.make_fut(data)
         mock_get.return_value = self.make_fut(mock_res)
 
@@ -93,3 +94,8 @@ class TestTranslate(AsyncTestCase):
         files = project.files
 
         self.assertEqual([{'id':1}], files)
+
+    @patch('aiohttp.request')
+    def test_project_failed_request(self, mock_get):
+        actual = self._test_project(mock_get, 404)
+        self.assertIsNone(actual)

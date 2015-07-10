@@ -25,8 +25,9 @@ class TestNewTranslation(AsyncTestCase):
     def _test(self, mock_get, text):
         req = MagicMock()
         req.post.return_value = self.make_fut(read('wti_hook.json'))
+        req.GET = {'app': 'test_app'}
         req.app = {
-            const.WTI_KEY: 'wti_key',
+            const.WTI_KEYS: {'test_app': 'wti_key'},
             const.MANDRILL_KEY: 'mandrill_key',
             const.ASYNC_WORKER: worker.Worker(self.loop)
         }
@@ -37,6 +38,7 @@ class TestNewTranslation(AsyncTestCase):
             self.make_fut({'text': text}),
             self.make_fut([{'user_id': 1, 'email': 'test@test.com'}]),
         ])
+        mock_res.status = 200
         mock_get.return_value = self.make_fut(mock_res)
 
         return self.coro(notifier.new_translation(req))

@@ -2,11 +2,12 @@ import aiohttp
 import asyncio
 import json
 import logging
+from aiohttp import log
 from parse import parse
 from functools import partial
 from collections import namedtuple
 
-logger = logging.getLogger('notifier')
+logger = log.web_logger
 
 translation_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings/{string_id}/locales/{locale}/translations.json'
 users_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/users.json'
@@ -63,6 +64,11 @@ def change_status(api_key, locale, string_id, text, status='status_unverified'):
 def project(api_key):
     url = project_url_pattern.format(api_key=api_key)
     res = yield from aiohttp.request('get', url)
+    if res.status != 200:
+        text = yield from res.text()
+        logger.error('request to get project info from wti failed. url: %s, status: %s, body: %s' %
+                     (url, res.status, text))
+        return None
     data = yield from res.json()
     project_data = data['project']
 

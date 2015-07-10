@@ -19,9 +19,12 @@ def new_translation(req):
     translation = payload.get('translation')
     if translation == None or translation.get('status') != 'status_proofread':
         return web.Response()
+    logger.info('translating url: %s, project_id: %s, user_id: %s' %
+                (payload['api_url'], payload['project_id'], payload['user_id']))
 
     string_id = payload['string_id']
-    wti_key = req.app[const.WTI_KEY]
+    wti_app = req.GET[const.REQ_APP_KEY]
+    wti_key = req.app[const.WTI_KEYS].get(wti_app)
     mandrill_key = req.app[const.MANDRILL_KEY]
     req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mandrill_key, string_id, payload)
     return web.Response()
@@ -52,12 +55,12 @@ def main(global_config, **settings):
     app = web.Application(logger=logger, loop=loop)
     app[const.ASYNC_WORKER] = worker.Worker(loop)
 
-    wti_key = settings.get('wti')
-    if wti_key == None:
-        raise ValueError('wti key is missing')
-    app[const.WTI_KEY] = wti_key
+    wti_keys = settings.get('wti_keys')
+    if not wti_keys:
+        raise ValueError('wti keys are missing')
+    app[const.WTI_KEYS] = wti_keys
     mandrill_key = settings.get('mandrill')
-    if wti_key == None:
+    if not mandrill_key:
         raise ValueError('mandrill key is missing')
     app[const.MANDRILL_KEY] = mandrill_key
 

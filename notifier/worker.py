@@ -12,7 +12,7 @@ def handle_exception(task, args):
         result = yield from task(*args)
         return result
     except Exception:
-        logger.exception()
+        logger.exception('there was an error while handling request')
 
 
 class Worker(object):
