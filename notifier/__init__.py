@@ -14,7 +14,7 @@ logger.setLevel(logging.INFO)
 def new_translation(req):
     data = yield from req.post()
     if 'payload' not in data:
-        return web.HTTPBadRequest()
+        return web.HTTPBadRequest('no payload in request data')
     payload = json.loads(data['payload'])
     translation = payload.get('translation')
     if translation == None or translation.get('status') != 'status_proofread':
@@ -23,8 +23,14 @@ def new_translation(req):
                 (payload['api_url'], payload['project_id'], payload['user_id']))
 
     string_id = payload['string_id']
-    wti_app = req.GET[const.REQ_APP_KEY]
+    wti_app = req.GET.get(const.REQ_APP_KEY)
+    if not wti_app:
+        logger.error('wti_app not in request query params')
+        return web.HTTPBadRequest()
     wti_key = req.app[const.WTI_KEYS].get(wti_app)
+    if not wti_key:
+        logger.error('wti key for %s does not exist' % wti_app)
+        return web.HTTPBadRequest()
     mandrill_key = req.app[const.MANDRILL_KEY]
     req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mandrill_key, string_id, payload)
     return web.Response()
