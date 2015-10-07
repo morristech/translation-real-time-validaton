@@ -17,7 +17,7 @@ def new_translation(req):
         return web.HTTPBadRequest('no payload in request data')
     payload = json.loads(data['payload'])
     translation = payload.get('translation')
-    if translation == None or translation.get('status') != 'status_proofread':
+    if translation is None or translation.get('status') != 'status_proofread':
         return web.Response()
     logger.info('translating url: %s, project_id: %s, user_id: %s' %
                 (payload['api_url'], payload['project_id'], payload['user_id']))

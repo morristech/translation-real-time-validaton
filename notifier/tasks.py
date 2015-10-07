@@ -13,6 +13,7 @@ SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name
 Error = namedtuple('Error', ['base', 'other', 'diff', 'section_link', 'file_path', 'base_path', 'other_path'])
 logger = log.web_logger
 
+
 def filter_filename(files, file_id):
     filtered_files = list(filter(lambda f: f['id'] == file_id, files))
     if not filtered_files:
@@ -23,7 +24,7 @@ def filter_filename(files, file_id):
 
 @asyncio.coroutine
 def compare_with_master(wti_key, mandrill_key, string_id, payload):
-    #TODO refactor
+    # TODO refactor
     project = yield from translate.project(wti_key)
     if not project:
         return

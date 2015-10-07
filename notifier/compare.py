@@ -1,8 +1,9 @@
-from validator import checks
+import validator
+import validator.checks
 import asyncio
 
 
 @asyncio.coroutine
 def diff(base, other):
-    md_check = checks.markdown()
-    return md_check._compare(base, other)
+    checks = [validator.checks.markdown()]
+    return validator.validate_text(checks, base, other)
