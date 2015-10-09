@@ -35,8 +35,8 @@ class TestNewTranslation(AsyncTestCase):
         mock_res = MagicMock()
         mock_res.json.side_effect = iter([
             self.make_fut(read('project.json')),
-            self.make_fut({'text': text}),
             self.make_fut([{'user_id': 1, 'email': 'test@test.com'}]),
+            self.make_fut({'text': text}),
         ])
         mock_res.status = 200
         mock_get.return_value = self.make_fut(mock_res)
