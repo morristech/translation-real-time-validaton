@@ -1,6 +1,7 @@
 # Some simple testing tasks (sorry, UNIX only).
 
-PYTHON=venv/bin/python3.4
+PYTHON=venv/bin/python3
+PSERVE=venv/bin/gunicorn --paste
 PIP=venv/bin/pip
 EI=venv/bin/easy_install
 NOSE=venv/bin/nosetests
@@ -8,34 +9,31 @@ FLAKE=venv/bin/flake8
 FLAGS=
 
 
-update:
-	$(PYTHON) ./setup.py develop
-
-devupdate:
-	$(PYTHON) ./setup.py develop
-
 env:
-	virtualenv -p python3 venv
-	$(PIP) install -r requirements.txt
+	python3 -m venv venv
+	$(PYTHON) ./setup.py develop
 
 dev:
 	$(PIP) install flake8 nose coverage requests
 	$(PYTHON) ./setup.py develop
 
+install:
+	$(PYTHON) ./setup.py install
+
 run:
-	$(PYTHON) run.py
+	$(PSERVE) ./etc/local.ini
 
 flake:
-	$(FLAKE) --exclude=./venv ./
+	$(FLAKE) event_pipe tests
 
-test:
+test: flake
 	$(NOSE) -s $(FLAGS)
 
 vtest:
 	$(NOSE) -s -v $(FLAGS)
 
 testloop:
-	while sleep 1; do $(PYTHON) runtests.py $(FLAGS); done
+	while sleep 1; do $(NOSE) -s $(FLAGS); done
 
 cov cover coverage:
 	$(NOSE) -s --with-cover --cover-html --cover-html-dir ./coverage $(FLAGS)

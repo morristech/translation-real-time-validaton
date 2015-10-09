@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import markdown
 import inlinestyler.utils as inline_styler
 import mandrill
 import asyncio
@@ -7,7 +8,8 @@ email_css = """
 <style type="text/css">
     table.diff {font-family:Courier; border:medium;}
     .diff_header {background-color:#e0e0e0}
-    td.diff_header {text-align:right}
+    td.diff_header {text-align:right;}
+    .diff tr {border: 1px solid black;}
     .diff_next {background-color:#c0c0c0}
     .diff_add {background-color:#aaffaa}
     .diff_chg {background-color:#ffff77}
@@ -29,10 +31,13 @@ email_error = """
 
     <tbody>
     <tr><td width="50%"><p id="left_html"></p></td><td width="50%"><p id="right_html"></p></td></tr>
+    <tr><td width="50%"><p id="left_diff"></p></td><td width="50%"><p id="right_diff"></p></td></tr>
     </tbody>
 </table>
 
-<div id="md_diff"></div>
+<div id="error_messages">
+
+</div>
 
 <a id="section_link" href="" target="_blank">Go to section</a>
 """
@@ -46,13 +51,18 @@ def _append_content(soup, tag_id, content):
 
 
 def _fill_error(diff):
+    base_html = markdown.markdown(diff.diff.base.parsed)
+    other_html = markdown.markdown(diff.diff.other.parsed)
+    error_msgs = '</br>'.join(diff.diff.error_msgs)
     email_soup = BeautifulSoup(email_error)
-    email_soup = _append_content(email_soup, 'file_path', diff.file_path)
+    email_soup = _append_content(email_soup, 'left_path', diff.file_path)
     email_soup = _append_content(email_soup, 'left_path', diff.base_path)
     email_soup = _append_content(email_soup, 'right_path', diff.other_path)
-    email_soup = _append_content(email_soup, 'left_html', BeautifulSoup(diff.base).body)
-    email_soup = _append_content(email_soup, 'right_html', BeautifulSoup(diff.other).body)
-    email_soup = _append_content(email_soup, 'md_diff', BeautifulSoup(diff.diff).body)
+    email_soup = _append_content(email_soup, 'left_html', BeautifulSoup(base_html).body)
+    email_soup = _append_content(email_soup, 'right_html', BeautifulSoup(other_html).body)
+    email_soup = _append_content(email_soup, 'left_diff', BeautifulSoup(diff.diff.base.diff).body)
+    email_soup = _append_content(email_soup, 'right_diff', BeautifulSoup(diff.diff.other.diff).body)
+    # email_soup = _append_content(email_soup, 'error_messages', error_msgs)
 
     tag = email_soup.select('#section_link')
     if tag:
@@ -60,16 +70,19 @@ def _fill_error(diff):
 
     return email_soup.prettify()
 
+
 @asyncio.coroutine
 def send(mandrill_key, user_email, diffs, topic=None):
     mandrill_client = mandrill.Mandrill(mandrill_key)
     template = '\n<hr>\n'.join(_fill_error(diff) for diff in diffs)
     email_body = inline_styler.inline_css(email_css + template)
     message = {
-        'from_email': 'message.from_email@example.com',
+        'from_email': 'no-reply@getkeepsafe.com',
         'from_name': 'KeepSafe Translation Verifier',
         'subject': topic or 'Translations not passing the validation test',
         'html': email_body,
-        'to': [{'email': user_email,'type': 'to'}],
+        'to': [{'email': user_email, 'type': 'to'}]
     }
-    return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
+    open('email.html', 'w').write(message['html'])
+    return
+    # return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')

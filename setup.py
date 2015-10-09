@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.download import PipSession
 
-version = '0.2.0'
+version = '0.3.0'
 
 
 def read(f):
@@ -13,7 +13,7 @@ install_reqs = parse_requirements('requirements.txt', session=PipSession())
 reqs = [str(ir.req) for ir in install_reqs]
 
 
-setup(name='translation-notifier',
+setup(name='ks-translation-notifier',
       version=version,
       description=('Verifies the translation from WebTranslateIt is correct and notifies if it is not'),
       long_description='\n\n'.join((read('README.md'), read('CHANGELOG'))),
@@ -30,7 +30,6 @@ setup(name='translation-notifier',
       namespace_packages=[],
       install_requires = reqs,
       entry_points={
-          'paste.app_factory': ['app = notifier:main'],
-          'console_scripts': [],
+          'paste.app_factory': ['app = notifier:app']
       },
       include_package_data = False)

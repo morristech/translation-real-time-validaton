@@ -2,19 +2,32 @@ import logging
 import logging.handlers
 import asyncio
 import json
+import socket
 from aiohttp import web, log
 
 from . import const, tasks, worker
 
-logger = log.web_logger
-logger.setLevel(logging.INFO)
+
+class ContextFilter(logging.Filter):
+    hostname = socket.gethostname()
+
+    def filter(self, record):
+        record.hostname = ContextFilter.hostname
+        return True
+
+
+root_logger = logging.getLogger()
+f = ContextFilter()
+root_logger.addFilter(f)
+
+logger = logging.getLogger()
 
 
 @asyncio.coroutine
 def new_translation(req):
     data = yield from req.post()
     if 'payload' not in data:
-        return web.HTTPBadRequest('no payload in request data')
+        return web.HTTPBadRequest()
     payload = json.loads(data['payload'])
     translation = payload.get('translation')
     if translation is None or translation.get('status') != 'status_proofread':
@@ -53,7 +66,7 @@ def healthcheck(req):
     return web.Response()
 
 
-def main(global_config, **settings):
+def app(global_config, **settings):
     logger.info('Loading configuration')
     loop = asyncio.get_event_loop()
     loop.set_debug(False)
@@ -64,7 +77,7 @@ def main(global_config, **settings):
     wti_keys = settings.get('wti_keys')
     if not wti_keys:
         raise ValueError('wti keys are missing')
-    app[const.WTI_KEYS] = wti_keys
+    app[const.WTI_KEYS] = dict(map(lambda i: i.split(':'), filter(bool, wti_keys.split('\n'))))
     mandrill_key = settings.get('mandrill')
     if not mandrill_key:
         raise ValueError('mandrill key is missing')

@@ -40,7 +40,7 @@ def user(api_key, user_id):
     res = yield from aiohttp.request('get', url)
     users = yield from res.json()
     for user in users:
-        if user['user_id'] == user_id:
+        if user.get('user_id') == user_id:
             return user
     return {}
 

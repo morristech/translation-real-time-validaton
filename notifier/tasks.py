@@ -5,7 +5,6 @@ from aiohttp import log
 
 from . import translate, compare, mailer
 
-
 PROJECT_URL = 'https://webtranslateit.com/api/projects/{}.json'
 SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name}/locales/{master_locale}..{other_locale}/strings/{string_id}'
 
@@ -39,7 +38,7 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
         error = Error(
             base=base,
             other=other,
-            diff=diff,
+            diff=diff[0],
             section_link=SECTION_URL.format(project_id=project.id, project_name=project.name, master_locale=master_locale, other_locale=other_locale, string_id=payload['string_id']),
             file_path='File: {}'.format(filename),
             base_path='Language: {}'.format(master_locale),
