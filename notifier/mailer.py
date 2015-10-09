@@ -15,10 +15,21 @@ email_css = """
     .diff_chg {background-color:#ffff77}
     .diff_sub {background-color:#ffaaaa}
     table {width:100%;}
+    .info_text {margin-bottom: 15px;}
 </style>
 """
 
 email_error = """
+<div class="info-text">
+    <h3>KeepSafe's validation tool has found some problems with the translation</h3>
+    <p>
+        The elements on the left show the reference text, the elements on the right the translation.<br />
+        The elements that are missing are highlighted in green, the ones which are unnecessary are highlighted in red. <br />
+        The tool is not always 100% accurate, sometimes it might show things that are correct as errors if there are other errors in the text. <br />
+        Please correct the errors you can find first. If you think the text is correct and the tool is still showing errors please contact KeepSafe's employee.
+    </p>
+</div>
+
 <table class="diff" id="difflib_chg_to4__top"
        cellspacing="0" cellpadding="0" rules="groups" width="600">
     <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
@@ -81,6 +92,9 @@ def send(mandrill_key, user_email, diffs, topic=None):
         'from_name': 'KeepSafe Translation Verifier',
         'subject': topic or 'Translations not passing the validation test',
         'html': email_body,
-        'to': [{'email': user_email, 'type': 'to'}]
+        'to': [
+            {'email': user_email, 'type': 'to'},
+            {'email': 'philipp+content-validator@getkeepsafe.com', 'type': 'cc'}
+        ],
     }
     return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')

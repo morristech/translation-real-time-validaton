@@ -7,7 +7,7 @@ from parse import parse
 from functools import partial
 from collections import namedtuple
 
-logger = log.web_logger
+logger = logging.getLogger(__name__)
 
 translation_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings/{string_id}/locales/{locale}/translations.json'
 users_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/users.json'

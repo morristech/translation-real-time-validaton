@@ -20,7 +20,7 @@ root_logger = logging.getLogger()
 f = ContextFilter()
 root_logger.addFilter(f)
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @asyncio.coroutine

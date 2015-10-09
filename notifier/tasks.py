@@ -10,7 +10,7 @@ SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name
 
 
 Error = namedtuple('Error', ['base', 'other', 'diff', 'section_link', 'file_path', 'base_path', 'other_path'])
-logger = log.web_logger
+logger = logging.getLogger(__name__)
 
 
 def filter_filename(files, file_id):
@@ -26,6 +26,10 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
     # TODO refactor
     project = yield from translate.project(wti_key)
     if not project:
+        return
+    user_id = payload['user_id']
+    user = yield from translate.user(wti_key, user_id)
+    if user.get('role') == 'manager':
         return
     master_locale = project.locales.source
     base_string = yield from translate.string(wti_key, master_locale, string_id)
@@ -44,8 +48,6 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
             base_path='Language: {}'.format(master_locale),
             other_path='Language: {}'.format(other_locale)
         )
-        user_id = payload['user_id']
-        user = yield from translate.user(wti_key, user_id)
         user_email = user.get('email')
         topic = 'Translations not passing the validation test - file {}, language {}, string_id {}'.format(filename, other_locale, string_id)
         logger.info(topic)

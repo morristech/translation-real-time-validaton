@@ -3,7 +3,7 @@ from aiohttp import log
 
 from . import const
 
-logger = log.web_logger
+logger = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
