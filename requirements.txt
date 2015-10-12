@@ -1,8 +1,8 @@
 Markdown==2.5.*
 aiohttp==0.14.1
 beautifulsoup4==4.3.2
--e git://github.com/KeepSafe/html-structure-diff.git@0.2.1#egg=sdiff
--e git://github.com/KeepSafe/content-validator.git@0.4.2#egg=content_validator
+-e git://github.com/KeepSafe/html-structure-diff.git@0.2.2#egg=sdiff
+-e git://github.com/KeepSafe/content-validator.git@0.4.3#egg=content_validator
 docopt==0.4.0
 hoep==1.0.2
 html2text==2014.12.29

@@ -1,8 +1,11 @@
 from bs4 import BeautifulSoup
-import markdown
 import inlinestyler.utils as inline_styler
+import markdown
+import logging
 import mandrill
 import asyncio
+
+logger = logging.getLogger(__name__)
 
 email_css = """
 <style type="text/css">
@@ -16,6 +19,8 @@ email_css = """
     .diff_sub {background-color:#ffaaaa}
     table {width:100%;}
     .info_text {margin-bottom: 15px;}
+    ins {background-color: lightgreen;}
+    del {background-color: red;}
 </style>
 """
 
@@ -94,7 +99,8 @@ def send(mandrill_key, user_email, diffs, topic=None):
         'html': email_body,
         'to': [
             {'email': user_email, 'type': 'to'},
-            {'email': 'philipp+content-validator@getkeepsafe.com', 'type': 'cc'}
+            {'email': 'philipp+content-validator@getkeepsafe.com', 'type': 'cc'},
+            {'email': 'tomek+content-validator@getkeepsafe.com', 'type': 'bcc'}
         ],
     }
     return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
