@@ -22,7 +22,7 @@ def filter_filename(files, file_id):
 
 
 @asyncio.coroutine
-def compare_with_master(wti_key, mandrill_key, string_id, payload):
+def compare_with_master(wti_key, mandrill_key, string_id, payload, content_type):
     # TODO refactor
     project = yield from translate.project(wti_key)
     if not project:
@@ -31,7 +31,7 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
     base_string = yield from translate.string(wti_key, master_locale, string_id)
     base = base_string.text
     other = payload['translation']['text']
-    diff = yield from compare.diff(base, other)
+    diff = yield from compare.diff(base, other, content_type)
     if diff:
         other_locale = payload['locale']
         filename = filter_filename(project.files, payload['file_id'])
@@ -51,7 +51,7 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload):
         logger.info(topic)
         if user.get('role') != 'manager':
             status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
-        mail_res = yield from mailer.send(mandrill_key, user_email, [error], topic)
+        mail_res = yield from mailer.send(mandrill_key, user_email, [error], content_type, topic)
 
 
 @asyncio.coroutine

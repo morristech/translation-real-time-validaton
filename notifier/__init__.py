@@ -44,8 +44,9 @@ def new_translation(req):
     if not wti_key:
         logger.error('wti key for %s does not exist' % wti_app)
         return web.HTTPBadRequest()
+    content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
     mandrill_key = req.app[const.MANDRILL_KEY]
-    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mandrill_key, string_id, payload)
+    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mandrill_key, string_id, payload, content_type)
     return web.Response()
 
 

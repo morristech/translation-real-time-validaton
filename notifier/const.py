@@ -6,3 +6,4 @@ ASYNC_WORKER = 'async_worker'
 TASK_QUEUE = 'worker_task_queue'
 
 REQ_APP_KEY = 'app'
+REQ_TYPE_KEY = 'type'

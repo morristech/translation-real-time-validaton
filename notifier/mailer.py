@@ -58,6 +58,37 @@ email_error = """
 <a id="section_link" href="" target="_blank">Go to section</a>
 """
 
+email_error_java = """
+<div class="info-text">
+    <h3>KeepSafe's validation tool has found some problems with the translation</h3>
+    <p>
+        The elements on the left show the reference text, the elements on the right the translation.<br />
+        The tool is not always 100% accurate, sometimes it might show things that are correct as errors if there are other errors in the text. <br />
+        Please correct the errors you can find first. If you think the text is correct and the tool is still showing errors please contact KeepSafe's employee.
+    </p>
+</div>
+
+<table class="diff" id="difflib_chg_to4__top"
+       cellspacing="0" cellpadding="0" rules="groups" width="600">
+    <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+    <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+
+    <thead>
+    <tr><td width="100%" id="file_path" colspan="2"></td></tr>
+    <tr><td width="50%" id="left_path"></td><td width="50%" id="right_path"></td></tr>
+    </thead>
+
+    <tbody>
+    <tr><td width="50%"><p id="left_html"></p></td><td width="50%"><p id="right_html"></p></td></tr>
+    </tbody>
+</table>
+
+<div id="error_messages">
+
+</div>
+
+<a id="section_link" href="" target="_blank">Go to section</a>
+"""
 
 def _append_content(soup, tag_id, content):
     tags = soup.select('#{}'.format(tag_id))
@@ -66,18 +97,19 @@ def _append_content(soup, tag_id, content):
     return soup
 
 
-def _fill_error(diff):
+def _fill_error(diff, content_type):
     base_html = markdown.markdown(diff.diff.base.parsed)
     other_html = markdown.markdown(diff.diff.other.parsed)
     error_msgs = '</br>'.join(diff.diff.error_msgs)
-    email_soup = BeautifulSoup(email_error)
+    email_soup = BeautifulSoup(email_error_java) if content_type == 'java' else BeautifulSoup(email_error)
     email_soup = _append_content(email_soup, 'left_path', diff.file_path)
     email_soup = _append_content(email_soup, 'left_path', diff.base_path)
     email_soup = _append_content(email_soup, 'right_path', diff.other_path)
     email_soup = _append_content(email_soup, 'left_html', BeautifulSoup(base_html).body)
     email_soup = _append_content(email_soup, 'right_html', BeautifulSoup(other_html).body)
-    email_soup = _append_content(email_soup, 'left_diff', BeautifulSoup(diff.diff.base.diff).body)
-    email_soup = _append_content(email_soup, 'right_diff', BeautifulSoup(diff.diff.other.diff).body)
+    if content_type == 'md':
+        email_soup = _append_content(email_soup, 'left_diff', BeautifulSoup(diff.diff.base.diff).body)
+        email_soup = _append_content(email_soup, 'right_diff', BeautifulSoup(diff.diff.other.diff).body)
     # email_soup = _append_content(email_soup, 'error_messages', error_msgs)
 
     tag = email_soup.select('#section_link')
@@ -88,9 +120,9 @@ def _fill_error(diff):
 
 
 @asyncio.coroutine
-def send(mandrill_key, user_email, diffs, topic=None):
+def send(mandrill_key, user_email, diffs, content_type, topic=None):
     mandrill_client = mandrill.Mandrill(mandrill_key)
-    template = '\n<hr>\n'.join(_fill_error(diff) for diff in diffs)
+    template = '\n<hr>\n'.join(_fill_error(diff, content_type) for diff in diffs)
     email_body = inline_styler.inline_css(email_css + template)
     message = {
         'from_email': 'no-reply@getkeepsafe.com',
@@ -103,4 +135,5 @@ def send(mandrill_key, user_email, diffs, topic=None):
             {'email': 'tomek+content-validator@getkeepsafe.com', 'type': 'bcc'}
         ],
     }
+    open('test.html', 'w').write(email_body)
     return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
