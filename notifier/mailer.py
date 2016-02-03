@@ -135,5 +135,4 @@ def send(mandrill_key, user_email, diffs, content_type, topic=None):
             {'email': 'tomek+content-validator@getkeepsafe.com', 'type': 'bcc'}
         ],
     }
-    open('test.html', 'w').write(email_body)
     return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
