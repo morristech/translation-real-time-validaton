@@ -21,6 +21,7 @@ email_css = """
     .info_text {margin-bottom: 15px;}
     ins {background-color: lightgreen;}
     del {background-color: red;}
+    #section_link {font-size: x-large;}
 </style>
 """
 
