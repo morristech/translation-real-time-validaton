@@ -136,4 +136,6 @@ def send(mandrill_key, user_email, diffs, content_type, topic=None):
             {'email': 'tomek+content-validator@getkeepsafe.com', 'type': 'bcc'}
         ],
     }
+    if content_type == 'java':
+        message['to'].append({'email': 'hilal+content-validator@getkeepsafe.com', 'type': 'cc'})
     return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
