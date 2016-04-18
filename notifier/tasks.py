@@ -22,7 +22,7 @@ def filter_filename(files, file_id):
 
 
 @asyncio.coroutine
-def compare_with_master(wti_key, mandrill_key, string_id, payload, content_type):
+def compare_with_master(wti_key, mandrill_key, string_id, payload, content_type, email_cms_host):
     # TODO refactor
     project = yield from translate.project(wti_key)
     if not project:
@@ -52,6 +52,8 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload, content_type)
         if user.get('role') != 'manager':
             status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
         mail_res = yield from mailer.send(mandrill_key, user_email, [error], content_type, topic)
+    else:
+        yield from aiohttp.request('PUT', email_cms_host)
 
 
 @asyncio.coroutine
