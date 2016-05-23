@@ -24,7 +24,7 @@ run:
 	$(PSERVE) ./etc/local.ini
 
 flake:
-	$(FLAKE) event_pipe tests
+	$(FLAKE) notifier tests
 
 test: flake
 	$(NOSE) -s $(FLAGS)

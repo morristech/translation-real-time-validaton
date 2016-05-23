@@ -53,7 +53,8 @@ def compare_with_master(wti_key, mandrill_key, string_id, payload, content_type,
             status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
         mail_res = yield from mailer.send(mandrill_key, user_email, [error], content_type, topic)
     else:
-        yield from aiohttp.request('PUT', email_cms_host)
+        # yield from aiohttp.request('PUT', email_cms_host)
+        pass
 
 
 @asyncio.coroutine

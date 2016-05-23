@@ -1,7 +1,7 @@
 MASTER_LOCALE = 'master_locale'
 WTI_KEYS = 'wti_keys'
 MANDRILL_KEY = 'mandrill_key'
-EMAIL_CMS = 'http://10.0.5.220:5002'
+EMAIL_CMS = 'srv.email_cms'
 
 ASYNC_WORKER = 'async_worker'
 TASK_QUEUE = 'worker_task_queue'

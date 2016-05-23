@@ -7,19 +7,6 @@ from aiohttp import web, log
 
 from . import const, tasks, worker
 
-
-class ContextFilter(logging.Filter):
-    hostname = socket.gethostname()
-
-    def filter(self, record):
-        record.hostname = ContextFilter.hostname
-        return True
-
-
-root_logger = logging.getLogger()
-f = ContextFilter()
-root_logger.addFilter(f)
-
 logger = logging.getLogger(__name__)
 
 
@@ -46,7 +33,7 @@ def new_translation(req):
         return web.HTTPBadRequest()
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
     mandrill_key = req.app[const.MANDRILL_KEY]
-    email_cms_host = req.app[const.EMAIL_CMS_HOST]
+    email_cms_host = req.app[const.EMAIL_CMS]
     req.app[const.ASYNC_WORKER].start(
         tasks.compare_with_master, wti_key, mandrill_key, string_id, payload, content_type, email_cms_host)
     return web.Response()
@@ -85,7 +72,7 @@ def app(global_config, **settings):
     if not mandrill_key:
         raise ValueError('mandrill key is missing')
     app[const.MANDRILL_KEY] = mandrill_key
-    app[const.EMAIL_CMS_HOST] = settings.get('email_cms')
+    app[const.EMAIL_CMS] = settings.get('email_cms')
 
     logger.info('Initializing public api endpoints')
     app.router.add_route('GET', '/healthcheck', healthcheck)
