@@ -1,0 +1,13 @@
+table.diff {font-family:Courier; border:medium;}
+.diff_header {background-color:#e0e0e0}
+td.diff_header {text-align:right;}
+.diff tr {border: 1px solid black;}
+.diff_next {background-color:#c0c0c0}
+.diff_add {background-color:#aaffaa}
+.diff_chg {background-color:#ffff77}
+.diff_sub {background-color:#ffaaaa}
+table {width:100%;}
+.info_text {margin-bottom: 15px;}
+ins {background-color: lightgreen;}
+del {background-color: red;}
+#section_link {font-size: x-large;}
