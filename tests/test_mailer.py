@@ -7,10 +7,9 @@ from . import AsyncTestCase
 
 class TestMailer(AsyncTestCase):
 
-    @patch('mandrill.Mandrill')
-    def test_send_happy_path(self, mock_mandrill):
-        mock_send = mock_mandrill.return_value.messages.send
+    @patch('aiohttp.request')
+    def test_send_happy_path(self, mock_req):
         user = {'email': 'test@test.com'}
         Error = namedtuple('Error', ['base', 'other', 'diff', 'base_path', 'other_path'])
         error = Error._make(['base', 'other', 'diff', 'base_path', 'other_path'])
-        mailer.send('key', user, error)
+        mailer.send('url', user, error, 'md')

@@ -29,7 +29,9 @@ class TestNewTranslation(AsyncTestCase):
         req.app = {
             const.WTI_KEYS: {'test_app': 'wti_key'} if wti_keys is None else wti_keys,
             const.MANDRILL_KEY: 'mandrill_key',
-            const.ASYNC_WORKER: worker.Worker(self.loop)
+            const.ASYNC_WORKER: worker.Worker(self.loop),
+            const.EMAIL_CMS: 'url',
+            const.MAILMAN: 'url'
         }
 
         mock_res = MagicMock()
