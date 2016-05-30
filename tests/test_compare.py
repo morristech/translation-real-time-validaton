@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from . import AsyncTestCase
 from notifier import compare
 

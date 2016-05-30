@@ -1,12 +1,12 @@
 import asyncio
 import logging
 from collections import namedtuple
-from aiohttp import log
 
 from . import translate, compare, mailer
 
 PROJECT_URL = 'https://webtranslateit.com/api/projects/{}.json'
-SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name}/locales/{master_locale}..{other_locale}/strings/{string_id}'
+SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name}/locales/\
+{master_locale}..{other_locale}/strings/{string_id}'
 
 
 Error = namedtuple('Error', ['base', 'other', 'diff', 'section_link', 'file_path', 'base_path', 'other_path'])
@@ -39,7 +39,9 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
             base=base,
             other=other,
             diff=diff[0],
-            section_link=SECTION_URL.format(project_id=project.id, project_name=project.name, master_locale=master_locale, other_locale=other_locale, string_id=payload['string_id']),
+            section_link=SECTION_URL.format(project_id=project.id, project_name=project.name,
+                                            master_locale=master_locale, other_locale=other_locale,
+                                            string_id=payload['string_id']),
             file_path='File: {}'.format(filename),
             base_path='Language: {}'.format(master_locale),
             other_path='Language: {}'.format(other_locale)
@@ -47,11 +49,13 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
         user_id = payload['user_id']
         user = yield from translate.user(wti_key, user_id)
         user_email = user.get('email')
-        topic = 'Translations not passing the validation test - file {}, language {}, string_id {}'.format(filename, other_locale, string_id)
+        topic = 'Translations not passing the validation test - file {}, language {}, string_id {}'.format(filename,
+                                                                                                           other_locale,
+                                                                                                           string_id)
         logger.info(topic)
         if user.get('role') != 'manager':
-            status_res = yield from translate.change_status(wti_key, payload['locale'], string_id, other)
-        mail_res = yield from mailer.send(mailman_client, user_email, [error], content_type, topic)
+            yield from translate.change_status(wti_key, payload['locale'], string_id, other)
+        yield from mailer.send(mailman_client, user_email, [error], content_type, topic)
     else:
         # yield from aiohttp.request('PUT', email_cms_host)
         pass

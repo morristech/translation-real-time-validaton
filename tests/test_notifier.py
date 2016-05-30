@@ -75,6 +75,7 @@ class TestNewTranslation(AsyncTestCase):
         res = self._test(mock_get, '', wti_keys={})
         self.assertEqual(400, res.status)
 
+
 class TestProject(AsyncTestCase):
 
     @patch('aiohttp.request')

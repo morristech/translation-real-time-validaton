@@ -2,8 +2,7 @@ import logging
 import logging.handlers
 import asyncio
 import json
-import socket
-from aiohttp import web, log
+from aiohttp import web
 
 from . import const, tasks, worker
 

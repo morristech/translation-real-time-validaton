@@ -10,6 +10,7 @@ from pybars import Compiler
 
 logger = logging.getLogger(__name__)
 
+
 def _read_template_file(name):
     path = os.path.join('./notifier/templates/', name)
     with open(path, 'r') as fp:
@@ -57,8 +58,10 @@ def send(mailman_endpoint, user_email, diffs, content_type, topic=None):
         message['bcc'].append('hilal+content-validator@getkeepsafe.com')
 
     try:
-        res = yield from asyncio.wait_for(aiohttp.request('post', mailman_endpoint, data=json.dumps(message)), 5)
+        res = yield from asyncio.wait_for(
+            aiohttp.request('post', mailman_endpoint, data=json.dumps(message)),
+            5)
         return res.status == 200
     except asyncio.TimeoutError:
-        logging.error('Request to {} took more then 5s to finish, dropping'.format(url))
+        logging.error('Request to %s took more then 5s to finish, dropping', mailman_endpoint)
     return False
