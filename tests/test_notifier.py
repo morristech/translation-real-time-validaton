@@ -28,7 +28,6 @@ class TestNewTranslation(AsyncTestCase):
         req.GET = {'app': 'test_app'} if req_query_params is None else req_query_params
         req.app = {
             const.WTI_KEYS: {'test_app': 'wti_key'} if wti_keys is None else wti_keys,
-            const.MANDRILL_KEY: 'mandrill_key',
             const.ASYNC_WORKER: worker.Worker(self.loop),
             const.EMAIL_CMS: 'url',
             const.MAILMAN: 'url'

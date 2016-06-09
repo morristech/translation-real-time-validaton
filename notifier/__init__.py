@@ -67,10 +67,6 @@ def app(global_config, **settings):
     if not wti_keys:
         raise ValueError('wti keys are missing')
     app[const.WTI_KEYS] = dict(map(lambda i: i.split(':'), filter(bool, wti_keys.split('\n'))))
-    mandrill_key = settings.get('mandrill')
-    if not mandrill_key:
-        raise ValueError('mandrill key is missing')
-    app[const.MANDRILL_KEY] = mandrill_key
     app[const.EMAIL_CMS] = settings.get('email_cms')
     app[const.MAILMAN] = settings['mailman_endpoint_url']
 
