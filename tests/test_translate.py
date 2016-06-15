@@ -69,7 +69,7 @@ class TestTranslate(AsyncTestCase):
         data = {
             'project': {
                 'source_locale': {'code': 'en-US'},
-                'target_locales': [{'code': 'en-US'},{'code': 'pl'}],
+                'target_locales': [{'code': 'en-US'}, {'code': 'pl'}],
                 'project_files': [{'id': 1}]
             }
         }
@@ -93,7 +93,7 @@ class TestTranslate(AsyncTestCase):
         project = self._test_project(mock_get)
         files = project.files
 
-        self.assertEqual([{'id':1}], files)
+        self.assertEqual([{'id': 1}], files)
 
     @patch('aiohttp.request')
     def test_project_failed_request(self, mock_get):

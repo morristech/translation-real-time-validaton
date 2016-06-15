@@ -4,8 +4,8 @@ gunicorn==19.3.0
 -e git://github.com/KeepSafe/content-validator.git#egg=content_validator
 docopt==0.4.0
 hoep==1.0.2
-mandrill==1.0.57
 parse==1.6.6
 requests==2.5.1
 inlinestyler==0.2.0
 PasteDeploy==1.5.2
+pybars3==0.9.1

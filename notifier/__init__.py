@@ -2,8 +2,7 @@ import logging
 import logging.handlers
 import asyncio
 import json
-import socket
-from aiohttp import web, log
+from aiohttp import web
 
 from . import const, tasks, worker
 
@@ -32,10 +31,10 @@ def new_translation(req):
         logger.error('wti key for %s does not exist' % wti_app)
         return web.HTTPBadRequest()
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
-    mandrill_key = req.app[const.MANDRILL_KEY]
+    mailman_endpoint = req.app[const.MAILMAN]
     email_cms_host = req.app[const.EMAIL_CMS]
     req.app[const.ASYNC_WORKER].start(
-        tasks.compare_with_master, wti_key, mandrill_key, string_id, payload, content_type, email_cms_host)
+        tasks.compare_with_master, wti_key, mailman_endpoint, string_id, payload, content_type, email_cms_host)
     return web.Response()
 
 
@@ -44,9 +43,9 @@ def project(req):
     api_key = req.match_info['api_key']
     params = yield from req.post()
     user_email = params['email']
-    mandrill_key = req.app[const.MANDRILL_KEY]
+    mailman_endpoint = req.app[const.MAILMAN]
 
-    req.app[const.ASYNC_WORKER].start(tasks.validate_project, api_key, mandrill_key, user_email)
+    req.app[const.ASYNC_WORKER].start(tasks.validate_project, api_key, mailman_endpoint, user_email)
 
     return web.Response()
 
@@ -68,11 +67,8 @@ def app(global_config, **settings):
     if not wti_keys:
         raise ValueError('wti keys are missing')
     app[const.WTI_KEYS] = dict(map(lambda i: i.split(':'), filter(bool, wti_keys.split('\n'))))
-    mandrill_key = settings.get('mandrill')
-    if not mandrill_key:
-        raise ValueError('mandrill key is missing')
-    app[const.MANDRILL_KEY] = mandrill_key
     app[const.EMAIL_CMS] = settings.get('email_cms')
+    app[const.MAILMAN] = settings['mailman_endpoint_url']
 
     logger.info('Initializing public api endpoints')
     app.router.add_route('GET', '/healthcheck', healthcheck)

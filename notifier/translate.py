@@ -2,9 +2,6 @@ import aiohttp
 import asyncio
 import json
 import logging
-from aiohttp import log
-from parse import parse
-from functools import partial
 from collections import namedtuple
 
 logger = logging.getLogger(__name__)

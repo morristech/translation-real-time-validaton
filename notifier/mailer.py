@@ -2,140 +2,66 @@ from bs4 import BeautifulSoup
 import inlinestyler.utils as inline_styler
 import markdown
 import logging
-import mandrill
 import asyncio
+import json
+import os.path
+import aiohttp
+from pybars import Compiler
 
 logger = logging.getLogger(__name__)
 
-email_css = """
-<style type="text/css">
-    table.diff {font-family:Courier; border:medium;}
-    .diff_header {background-color:#e0e0e0}
-    td.diff_header {text-align:right;}
-    .diff tr {border: 1px solid black;}
-    .diff_next {background-color:#c0c0c0}
-    .diff_add {background-color:#aaffaa}
-    .diff_chg {background-color:#ffff77}
-    .diff_sub {background-color:#ffaaaa}
-    table {width:100%;}
-    .info_text {margin-bottom: 15px;}
-    ins {background-color: lightgreen;}
-    del {background-color: red;}
-    #section_link {font-size: x-large;}
-</style>
-"""
 
-email_error = """
-<div class="info-text">
-    <h3>KeepSafe's validation tool has found some problems with the translation</h3>
-    <p>
-        The elements on the left show the reference text, the elements on the right the translation.<br />
-        The elements that are missing are highlighted in green, the ones which are unnecessary are highlighted in red. <br />
-        The tool is not always 100% accurate, sometimes it might show things that are correct as errors if there are other errors in the text. <br />
-        Please correct the errors you can find first. If you think the text is correct and the tool is still showing errors please contact KeepSafe's employee.
-    </p>
-</div>
-
-<table class="diff" id="difflib_chg_to4__top"
-       cellspacing="0" cellpadding="0" rules="groups" width="600">
-    <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
-    <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
-
-    <thead>
-    <tr><td width="100%" id="file_path" colspan="2"></td></tr>
-    <tr><td width="50%" id="left_path"></td><td width="50%" id="right_path"></td></tr>
-    </thead>
-
-    <tbody>
-    <tr><td width="50%"><p id="left_html"></p></td><td width="50%"><p id="right_html"></p></td></tr>
-    <tr><td width="50%"><p id="left_diff"></p></td><td width="50%"><p id="right_diff"></p></td></tr>
-    </tbody>
-</table>
-
-<div id="error_messages">
-
-</div>
-
-<a id="section_link" href="" target="_blank">Go to section</a>
-"""
-
-email_error_java = """
-<div class="info-text">
-    <h3>KeepSafe's validation tool has found some problems with the translation</h3>
-    <p>
-        The elements on the left show the reference text, the elements on the right the translation.<br />
-        The tool is not always 100% accurate, sometimes it might show things that are correct as errors if there are other errors in the text. <br />
-        Please correct the errors you can find first. If you think the text is correct and the tool is still showing errors please contact KeepSafe's employee.
-    </p>
-</div>
-
-<table class="diff" id="difflib_chg_to4__top"
-       cellspacing="0" cellpadding="0" rules="groups" width="600">
-    <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
-    <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
-
-    <thead>
-    <tr><td width="100%" id="file_path" colspan="2"></td></tr>
-    <tr><td width="50%" id="left_path"></td><td width="50%" id="right_path"></td></tr>
-    </thead>
-
-    <tbody>
-    <tr><td width="50%"><p id="left_html"></p></td><td width="50%"><p id="right_html"></p></td></tr>
-    </tbody>
-</table>
-
-<div id="error_messages">
-
-</div>
-
-<a id="section_link" href="" target="_blank">Go to section</a>
-"""
-
-def _append_content(soup, tag_id, content):
-    tags = soup.select('#{}'.format(tag_id))
-    if tags and content:
-        tags[0].append(content)
-    return soup
+def _read_template_file(name):
+    path = os.path.join('./notifier/templates/', name)
+    with open(path, 'r') as fp:
+        return fp.read()
 
 
-def _fill_error(diff, content_type):
+def _parse_error(diff, content_type):
     base_html = markdown.markdown(diff.diff.base.parsed)
     other_html = markdown.markdown(diff.diff.other.parsed)
-    error_msgs = '</br>'.join(diff.diff.error_msgs)
-    email_soup = BeautifulSoup(email_error_java) if content_type == 'java' else BeautifulSoup(email_error)
-    email_soup = _append_content(email_soup, 'left_path', diff.file_path)
-    email_soup = _append_content(email_soup, 'left_path', diff.base_path)
-    email_soup = _append_content(email_soup, 'right_path', diff.other_path)
-    email_soup = _append_content(email_soup, 'left_html', BeautifulSoup(base_html).body)
-    email_soup = _append_content(email_soup, 'right_html', BeautifulSoup(other_html).body)
+
+    template_vars = {
+        'error_messages': diff.diff.error_msgs,
+        'left_path': diff.file_path + diff.base_path,
+        'right_path': diff.other_path,
+        'left_html': BeautifulSoup(base_html).body,
+        'right_html': BeautifulSoup(other_html).body,
+        'section_link': diff.section_link
+    }
     if content_type == 'md':
-        email_soup = _append_content(email_soup, 'left_diff', BeautifulSoup(diff.diff.base.diff).body)
-        email_soup = _append_content(email_soup, 'right_diff', BeautifulSoup(diff.diff.other.diff).body)
-    # email_soup = _append_content(email_soup, 'error_messages', error_msgs)
+        template_vars['left_diff'] = BeautifulSoup(diff.diff.base.diff).body,
+        template_vars['right_diff'] = BeautifulSoup(diff.diff.other.diff).body
 
-    tag = email_soup.select('#section_link')
-    if tag:
-        tag[0]['href'] = diff.section_link
-
-    return email_soup.prettify()
+    return template_vars
 
 
 @asyncio.coroutine
-def send(mandrill_key, user_email, diffs, content_type, topic=None):
-    mandrill_client = mandrill.Mandrill(mandrill_key)
-    template = '\n<hr>\n'.join(_fill_error(diff, content_type) for diff in diffs)
-    email_body = inline_styler.inline_css(email_css + template)
+def send(mailman_endpoint, user_email, diffs, content_type, topic=None):
+    template_source = _read_template_file('base_error.hbs')
+
+    template = Compiler().compile(template_source)({
+        'errors': [_parse_error(diff, content_type) for diff in diffs],
+        'css': _read_template_file('basic.css')
+    })
+    email_body = inline_styler.inline_css(template)
     message = {
-        'from_email': 'no-reply@getkeepsafe.com',
+        'from_addr': 'no-reply@getkeepsafe.com',
         'from_name': 'KeepSafe Translation Verifier',
         'subject': topic or 'Translations not passing the validation test',
         'html': email_body,
-        'to': [
-            {'email': user_email, 'type': 'to'},
-            {'email': 'philipp+content-validator@getkeepsafe.com', 'type': 'cc'},
-            {'email': 'tomek+content-validator@getkeepsafe.com', 'type': 'bcc'}
-        ],
+        'to': user_email,
+        'cc': ['philipp+content-validator@getkeepsafe.com'],
+        'bcc': ['tomek+content-validator@getkeepsafe.com']
     }
     if content_type == 'java':
-        message['to'].append({'email': 'hilal+content-validator@getkeepsafe.com', 'type': 'cc'})
-    return mandrill_client.messages.send(message=message, async=True, ip_pool='Main Pool')
+        message['bcc'].append('hilal+content-validator@getkeepsafe.com')
+
+    try:
+        res = yield from asyncio.wait_for(
+            aiohttp.request('post', mailman_endpoint, data=json.dumps(message)),
+            5)
+        return res.status == 200
+    except asyncio.TimeoutError:
+        logging.error('Request to %s took more then 5s to finish, dropping', mailman_endpoint)
+    return False

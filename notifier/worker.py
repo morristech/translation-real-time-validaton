@@ -1,8 +1,5 @@
 import asyncio
 import logging
-from aiohttp import log
-
-from . import const
 
 logger = logging.getLogger(__name__)
 
@@ -22,4 +19,4 @@ class Worker(object):
         self.loop = loop
 
     def start(self, task, *args):
-        result = asyncio.async(handle_exception(task, args))
+        asyncio.async(handle_exception(task, args))

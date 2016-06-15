@@ -28,15 +28,16 @@ class TestNewTranslation(AsyncTestCase):
         req.GET = {'app': 'test_app'} if req_query_params is None else req_query_params
         req.app = {
             const.WTI_KEYS: {'test_app': 'wti_key'} if wti_keys is None else wti_keys,
-            const.MANDRILL_KEY: 'mandrill_key',
-            const.ASYNC_WORKER: worker.Worker(self.loop)
+            const.ASYNC_WORKER: worker.Worker(self.loop),
+            const.EMAIL_CMS: 'url',
+            const.MAILMAN: 'url'
         }
 
         mock_res = MagicMock()
         mock_res.json.side_effect = iter([
             self.make_fut(read('project.json')),
-            self.make_fut([{'user_id': 1, 'email': 'test@test.com'}]),
             self.make_fut({'text': text}),
+            self.make_fut([{'user_id': 1, 'email': 'test@test.com'}])
         ])
         mock_res.status = 200
         mock_get.return_value = self.make_fut(mock_res)
@@ -72,6 +73,7 @@ class TestNewTranslation(AsyncTestCase):
     def test_no_key_for_wti_app(self, mock_get):
         res = self._test(mock_get, '', wti_keys={})
         self.assertEqual(400, res.status)
+
 
 class TestProject(AsyncTestCase):
 

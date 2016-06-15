@@ -26,7 +26,7 @@ setup(name='ks-translation-notifier',
       url='https://github.com/KeepSafe/translation-notifier/',
       license='Apache',
       packages=find_packages(exclude=['tests']),
-      package_data={},
+      package_data={'notifier': ['templates/*.css', 'templates/*.hbs']},
       namespace_packages=[],
       install_requires = reqs,
       entry_points={
