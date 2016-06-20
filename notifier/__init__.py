@@ -12,20 +12,20 @@ logger = logging.getLogger(__name__)
 @asyncio.coroutine
 def new_translation(req):
     data = yield from req.post()
+    wti_key = req.GET.get(const.REQ_APP_KEY)
+    if not wti_key:
+        logger.error('wti_key not in request query params ')
+        return web.HTTPBadRequest()
     if 'payload' not in data:
         return web.HTTPBadRequest()
+
     payload = json.loads(data['payload'])
     translation = payload.get('translation')
     if translation is None or translation.get('status') != 'status_proofread':
         return web.Response()
     logger.info('translating url: %s, project_id: %s, user_id: %s' %
                 (payload['api_url'], payload['project_id'], payload['user_id']))
-
     string_id = payload['string_id']
-    wti_key = req.GET.get(const.REQ_APP_KEY)
-    if not wti_key:
-        logger.error('wti_key not in request query params')
-        return web.HTTPBadRequest()
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
     mailman_endpoint = req.app[const.MAILMAN]
     email_cms_host = req.app[const.EMAIL_CMS]
