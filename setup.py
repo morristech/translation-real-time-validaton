@@ -16,7 +16,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 setup(name='ks-translation-notifier',
       version=version,
       description=('Verifies the translation from WebTranslateIt is correct and notifies if it is not'),
-      long_description='\n\n'.join((read('README.md'), read('CHANGELOG'))),
+      long_description='\n\n'.join((read('README.md'))),
       classifiers=[
           'License :: OSI Approved :: BSD License',
           'Intended Audience :: Developers',
