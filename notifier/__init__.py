@@ -22,13 +22,9 @@ def new_translation(req):
                 (payload['api_url'], payload['project_id'], payload['user_id']))
 
     string_id = payload['string_id']
-    wti_app = req.GET.get(const.REQ_APP_KEY)
-    if not wti_app:
-        logger.error('wti_app not in request query params')
-        return web.HTTPBadRequest()
-    wti_key = req.app[const.WTI_KEYS].get(wti_app)
+    wti_key = req.GET.get(const.REQ_APP_KEY)
     if not wti_key:
-        logger.error('wti key for %s does not exist' % wti_app)
+        logger.error('wti_key not in request query params')
         return web.HTTPBadRequest()
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
     mailman_endpoint = req.app[const.MAILMAN]
@@ -63,10 +59,6 @@ def app(global_config, **settings):
     app = web.Application(logger=logger, loop=loop)
     app[const.ASYNC_WORKER] = worker.Worker(loop)
 
-    wti_keys = settings.get('wti_keys')
-    if not wti_keys:
-        raise ValueError('wti keys are missing')
-    app[const.WTI_KEYS] = dict(map(lambda i: i.split(':'), filter(bool, wti_keys.split('\n'))))
     app[const.EMAIL_CMS] = settings.get('email_cms')
     app[const.MAILMAN] = settings['mailman_endpoint_url']
 
