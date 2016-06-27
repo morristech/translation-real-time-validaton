@@ -11,6 +11,11 @@ from pybars import Compiler
 logger = logging.getLogger(__name__)
 
 
+def _inner_html(html):
+    soup = BeautifulSoup(html).body
+    return ''.join(map(lambda t: str(t), soup.contents))
+
+
 def _read_template_file(name):
     path = os.path.join('./notifier/templates/', name)
     with open(path, 'r') as fp:
@@ -22,16 +27,16 @@ def _parse_error(diff, content_type):
     other_html = markdown.markdown(diff.diff.other.parsed)
 
     template_vars = {
-        'error_messages': diff.diff.error_msgs,
+        'error_messages': list(diff.diff.error_msgs),
         'left_path': diff.file_path + diff.base_path,
         'right_path': diff.other_path,
-        'left_html': BeautifulSoup(base_html).body,
-        'right_html': BeautifulSoup(other_html).body,
+        'left_html': _inner_html(base_html),
+        'right_html': _inner_html(other_html),
         'section_link': diff.section_link
     }
     if content_type == 'md':
-        template_vars['left_diff'] = BeautifulSoup(diff.diff.base.diff).body,
-        template_vars['right_diff'] = BeautifulSoup(diff.diff.other.diff).body
+        template_vars['left_diff'] = _inner_html(diff.diff.base.diff)
+        template_vars['right_diff'] = _inner_html(diff.diff.other.diff)
 
     return template_vars
 
