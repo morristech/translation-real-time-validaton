@@ -55,7 +55,11 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
         logger.info(topic)
         if user.get('role') != 'manager':
             yield from translate.change_status(wti_key, payload['locale'], string_id, other)
-        yield from mailer.send(mailman_client, user_email, [error], content_type, topic)
+        result = yield from mailer.send(mailman_client, user_email, [error], content_type, topic)
+        if result:
+            logger.info('sending email to agent %s', user_id)
+        else:
+            logger.error('unable to notify agent %s', user_id)
     else:
         # yield from aiohttp.request('PUT', email_cms_host)
         pass
