@@ -66,6 +66,7 @@ def send(mailman_endpoint, user_email, diffs, content_type, topic=None):
         res = yield from asyncio.wait_for(
             aiohttp.request('post', mailman_endpoint, data=json.dumps(message)),
             5)
+        yield from res.release()
         return res.status == 200
     except asyncio.TimeoutError:
         logging.error('Request to %s took more then 5s to finish, dropping', mailman_endpoint)
