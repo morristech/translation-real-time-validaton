@@ -17,7 +17,7 @@ def _read_template_file(name):
         return fp.read()
 
 
-def _parse_error(diff, content_type):
+def _parse_diff_error(diff, content_type):
     base_html = markdown.markdown(diff.diff.base.parsed)
     other_html = markdown.markdown(diff.diff.other.parsed)
 
@@ -37,11 +37,12 @@ def _parse_error(diff, content_type):
 
 
 @asyncio.coroutine
-def send(mailman_endpoint, user_email, diffs, content_type, topic=None):
+def send(mailman_endpoint, user_email, diffs, url_errors, content_type, topic=None):
     template_source = _read_template_file('base_error.hbs')
 
     template = Compiler().compile(template_source)({
-        'errors': [_parse_error(diff, content_type) for diff in diffs],
+        'diff_errors': [_parse_diff_error(diff, content_type) for diff in diffs],
+        'url_errors': url_errors,
         'css': _read_template_file('basic.css')
     })
     email_body = inline_styler.inline_css(template)
