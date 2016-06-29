@@ -61,7 +61,12 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
         url_errors = list(map(partial(_make_url_error, base, other, filename, master_locale, other_locale, section_link),
                               url_diffs))
         logger.info(topic)
-        yield from mailer.send(mailman_client, user_email, [], url_errors, content_type, topic)
+        result = yield from mailer.send(mailman_client, user_email, [], url_errors, content_type, topic)
+        if result:
+            logger.info('sending email to agent %s', user_id)
+        else:
+            logger.error('unable to notify agent %s', user_id)
+
     elif filename[-8:] == '.strings':
         return
     else:
@@ -79,7 +84,11 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
             logger.info(topic)
             if user.get('role') != 'manager':
                 yield from translate.change_status(wti_key, payload['locale'], string_id, other)
-            yield from mailer.send(mailman_client, user_email, [error], [], content_type, topic)
+            result = yield from mailer.send(mailman_client, user_email, [error], [], content_type, topic)
+            if result:
+                logger.info('sending email to agent %s', user_id)
+            else:
+                logger.error('unable to notify agent %s', user_id)
         else:
             # yield from aiohttp.request('PUT', email_cms_host)
             pass

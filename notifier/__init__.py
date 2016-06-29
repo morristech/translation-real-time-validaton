@@ -23,8 +23,7 @@ def new_translation(req):
     translation = payload.get('translation')
     if translation is None or translation.get('status') != 'status_proofread':
         return web.Response()
-    logger.info('translating url: %s, project_id: %s, user_id: %s' %
-                (payload['api_url'], payload['project_id'], payload['user_id']))
+    logger.info('translating project_id: %s, user_id: %s', payload['project_id'], payload['user_id'])
     string_id = payload['string_id']
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
     mailman_endpoint = req.app[const.MAILMAN]
