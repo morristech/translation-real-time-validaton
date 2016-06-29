@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from notifier import mailer
 from collections import namedtuple
 
@@ -9,7 +9,7 @@ class TestMailer(AsyncTestCase):
 
     @patch('aiohttp.request')
     def test_send_happy_path(self, mock_req):
-        mock_req.side_effect = self.make_fut('')
+        mock_req.side_effect = iter([self.make_fut(MagicMock(status=200))])
         user = {'email': 'test@test.com'}
         diff_base = namedtuple('DiffBase', ['parsed', 'diff'])('parsed', 'diff')
         diff = namedtuple('Diff', ['base', 'other', 'error_msgs'])(diff_base, diff_base, ['error'])
