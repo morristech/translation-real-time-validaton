@@ -1,4 +1,4 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from notifier import mailer
 from collections import namedtuple
 
