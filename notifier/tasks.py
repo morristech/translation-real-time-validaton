@@ -2,6 +2,7 @@ import asyncio
 import logging
 from collections import namedtuple
 from functools import partial
+from pathlib import Path
 
 from . import translate, compare, mailer
 
@@ -46,6 +47,7 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
     base = base_string.text
     other = payload['translation']['text']
     filename = filter_filename(project.files, payload['file_id'])
+    filename_ext = Path(filename).suffix
     section_link = SECTION_URL.format(project_id=project.id, project_name=project.name,
                                       master_locale=master_locale, other_locale=other_locale,
                                       string_id=payload['string_id']),
@@ -56,7 +58,7 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
                                                                                                        other_locale,
                                                                                                        string_id)
 
-    if content_type == 'ios' and filename[-4:] == '.txt':
+    if content_type == 'ios' and filename_ext == '.txt':
         url_diffs = compare.urls(base, other)
         url_errors = list(map(partial(_make_url_error, base, other, filename, master_locale, other_locale, section_link),
                               url_diffs))
@@ -67,7 +69,7 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
         else:
             logger.error('unable to notify agent %s', user_id)
 
-    elif filename[-8:] == '.strings':
+    elif filename_ext == '.strings':
         return
     else:
         diff = yield from compare.diff(base, other, content_type)
