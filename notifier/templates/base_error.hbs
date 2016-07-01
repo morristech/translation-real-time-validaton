@@ -11,7 +11,21 @@
     </p>
 </div>
 
-{{#each errors}}
+{{#if url_errors}}
+<h2>Broken URLs</h2>
+    <ol>
+    {{#each url_errors}}
+        <li>
+            <code>{{url}}</code><br/>
+            Status: <b>{{status_code}}</b><br/>
+            File <b>{{file_path}}</b>, locale <b>{{locale}}</b><br/>
+            <a href="{{section_link}}" target="_blank">Go to section</a>
+        </li>
+    {{/each}}
+    </ol>
+{{/if}}
+
+{{#each diff_errors}}
     <table class="diff" id="difflib_chg_to4__top"
            cellspacing="0" cellpadding="0" rules="groups" width="600">
         <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
