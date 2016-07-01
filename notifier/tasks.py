@@ -50,7 +50,7 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
     filename_ext = Path(filename).suffix
     section_link = SECTION_URL.format(project_id=project.id, project_name=project.name,
                                       master_locale=master_locale, other_locale=other_locale,
-                                      string_id=payload['string_id']),
+                                      string_id=payload['string_id'])
     user_id = payload['user_id']
     user = yield from translate.user(wti_key, user_id)
     user_email = user.get('email')
