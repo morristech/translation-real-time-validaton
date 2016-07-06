@@ -11,6 +11,16 @@ logger = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def new_translation(req):
+    """
+    @api {POST} /translations/?wti_apikey={}&type={} Validate translation
+    @apiGroup Webhooks
+    @apiDescription WTI webhook endpoint. Schedule translation validation task.
+    @apiParam {string} wti_apikey
+    @apiParam {string} type *OPTIONAL* Default: `md`. Supported: `md`, `ios`, `java`.
+    @apiParam (Request JSON) {string} payload WTI payload
+
+    @apiError 400 Missing `wti_key` or `payload`
+    """
     data = yield from req.post()
     wti_key = req.GET.get(const.REQ_APP_KEY)
     if not wti_key:
@@ -35,6 +45,13 @@ def new_translation(req):
 
 @asyncio.coroutine
 def project(req):
+    """
+    @api {POST} /projects/{api_key} Validate
+    @apiGroup Projects
+    @apiDescription Schedule project validation and notify via provided email.
+    @apiParam {string} api_key
+    @apiParam (POST Parameters) {string} email email to notify
+    """
     api_key = req.match_info['api_key']
     params = yield from req.post()
     user_email = params['email']
@@ -47,6 +64,10 @@ def project(req):
 
 @asyncio.coroutine
 def healthcheck(req):
+    """
+    @api {GET} /healthcheck Healthcheck
+    @apiGroup Healthcheck
+    """
     return web.Response()
 
 
