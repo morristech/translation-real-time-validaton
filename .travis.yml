@@ -3,8 +3,11 @@ python:
   - "3.4"
   - "3.5"
 # command to install dependencies
-install: "pip install -r requirements-dev.txt"
+install:
+  - pip install -r requirements-dev.txt
+  - npm install apidoc
 # command to run tests
 script:
   - flake8 notifier tests
   - nosetests
+  - apidoc -i notifier

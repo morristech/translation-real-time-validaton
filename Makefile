@@ -6,6 +6,8 @@ PIP=venv/bin/pip
 EI=venv/bin/easy_install
 NOSE=venv/bin/nosetests
 FLAKE=venv/bin/flake8
+APIDOC=node_modules/.bin/apidoc
+APIDOC_BUILD_DIR=doc/
 FLAGS=
 
 
@@ -16,6 +18,7 @@ env:
 dev:
 	$(PIP) install flake8 nose coverage requests
 	$(PYTHON) ./setup.py develop
+	npm install apidoc
 
 install:
 	$(PYTHON) ./setup.py install
@@ -39,6 +42,9 @@ cov cover coverage:
 	$(NOSE) -s --with-cover --cover-html --cover-html-dir ./coverage $(FLAGS)
 	echo "open file://`pwd`/coverage/index.html"
 
+apidoc:
+	$(APIDOC) -o $(APIDOC_BUILD_DIR) -i notifier
+
 clean:
 	rm -rf `find . -name __pycache__`
 	rm -f `find . -type f -name '*.py[co]' `
@@ -51,6 +57,7 @@ clean:
 	rm -f .coverage
 	rm -rf coverage
 	rm -rf build
+	rm -rf $(APIDOC_BUILD_DIR)
 
 
 .PHONY: all build env linux run pep test vtest testloop cov clean

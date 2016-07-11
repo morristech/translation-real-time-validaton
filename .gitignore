@@ -57,3 +57,6 @@ target/
 .DS_Store
 srv.ini
 *.log
+
+node_modules/
+doc/
