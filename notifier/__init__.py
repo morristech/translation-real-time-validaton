@@ -78,7 +78,6 @@ def app(global_config, **settings):
 
     app = web.Application(logger=logger, loop=loop)
     app[const.ASYNC_WORKER] = worker.Worker(loop)
-
     app[const.EMAIL_CMS] = settings.get('email_cms')
     app[const.MAILMAN] = settings['mailman_endpoint_url']
 

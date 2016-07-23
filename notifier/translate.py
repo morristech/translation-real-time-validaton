@@ -51,7 +51,8 @@ def change_status(api_key, locale, string_id, text, status='status_unverified'):
     headers = {'content-type': 'application/json'}
     url = status_url_pattern.format(api_key=api_key, locale=locale, string_id=string_id)
     try:
-        res = yield from asyncio.wait_for(aiohttp.request('post', url, data=message, headers=headers), 10)
+        res = yield from asyncio.wait_for(aiohttp.request('post', url, data=message, headers=headers), 5)
+        yield from res.release()
         return res.status == 202
     except asyncio.TimeoutError:
         logging.error('Request to {} took more then 5s to finish, dropping'.format(url))
