@@ -64,11 +64,16 @@ def send(mailman_endpoint, user_email, diffs, url_errors, content_type, topic=No
         message['bcc'].append('hilal+content-validator@getkeepsafe.com')
 
     try:
-        res = yield from asyncio.wait_for(
-            aiohttp.request('post', mailman_endpoint, data=json.dumps(message)),
-            5)
-        yield from res.release()
-        return res.status == 200
+        res = yield from asyncio.wait_for(aiohttp.request('post', mailman_endpoint, data=json.dumps(message)), 5)
+        if res.status != 200:
+            msg = yield from res.read()
+            logger.error('unable to send email, status: %s, message: %s', res.status, msg)
+            return False
+        else:
+            yield from res.release()
+            return True
     except asyncio.TimeoutError:
         logging.error('Request to %s took more then 5s to finish, dropping', mailman_endpoint)
+    except aiohttp.ClientOSError:
+        logging.error('Request to %s failed', mailman_endpoint)
     return False
