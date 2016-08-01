@@ -56,6 +56,7 @@ def send(mailman_endpoint, user_email, diffs, url_errors, content_type, topic=No
         'from_name': 'KeepSafe Translation Verifier',
         'subject': topic or 'Translations not passing the validation test',
         'html': email_body,
+        'text': 'only html body is available, please enable html in your emails',
         'to': user_email,
         'cc': ['philipp+content-validator@getkeepsafe.com'],
         'bcc': ['tomek+content-validator@getkeepsafe.com']
