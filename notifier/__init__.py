@@ -30,7 +30,11 @@ def new_translation(req):
         return web.HTTPBadRequest()
 
     payload = json.loads(data['payload'])
-    translation = payload.get('translation')
+    try:
+        translation = payload.get('translation')
+    except AttributeError:
+        logger.exception('got unexpected data %s', payload)
+        return web.Response()
     if translation is None or translation.get('status') != 'status_proofread':
         return web.Response()
     logger.info('translating project_id: %s, user_id: %s', payload['project_id'], payload['user_id'])
