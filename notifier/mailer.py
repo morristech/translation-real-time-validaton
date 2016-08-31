@@ -7,8 +7,10 @@ import json
 import os.path
 import aiohttp
 from pybars import Compiler
+from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
+SEND_EMAIL_PATH = 'sender/send'
 
 
 def _inner_html(html):
@@ -42,7 +44,7 @@ def _parse_diff_error(diff, content_type):
 
 
 @asyncio.coroutine
-def send(mailman_endpoint, user_email, diffs, url_errors, content_type, topic=None):
+def send(mailman_host, user_email, diffs, url_errors, content_type, topic=None):
     template_source = _read_template_file('base_error.hbs')
 
     template = Compiler().compile(template_source)({
@@ -65,7 +67,8 @@ def send(mailman_endpoint, user_email, diffs, url_errors, content_type, topic=No
         message['bcc'].append('hilal+content-validator@getkeepsafe.com')
 
     try:
-        res = yield from asyncio.wait_for(aiohttp.request('post', mailman_endpoint, data=json.dumps(message)), 5)
+        url = urljoin(mailman_host, SEND_EMAIL_PATH.lstrip('/'))
+        res = yield from asyncio.wait_for(aiohttp.request('post', url, data=json.dumps(message)), 5)
         if res.status != 200:
             msg = yield from res.read()
             logger.error('unable to send email, status: %s, message: %s', res.status, msg)

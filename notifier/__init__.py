@@ -40,10 +40,9 @@ def new_translation(req):
     logger.info('translating project_id: %s, user_id: %s', payload['project_id'], payload['user_id'])
     string_id = payload['string_id']
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
-    mailman_endpoint = req.app[const.MAILMAN]
-    email_cms_host = req.app[const.EMAIL_CMS]
+    mailman_url = req.app[const.MAILMAN]
     req.app[const.ASYNC_WORKER].start(
-        tasks.compare_with_master, wti_key, mailman_endpoint, string_id, payload, content_type, email_cms_host)
+        tasks.compare_with_master, wti_key, mailman_url, string_id, payload, content_type)
     return web.Response()
 
 
@@ -82,8 +81,7 @@ def app(global_config, **settings):
 
     app = web.Application(logger=logger, loop=loop)
     app[const.ASYNC_WORKER] = worker.Worker(loop)
-    app[const.EMAIL_CMS] = settings.get('email_cms')
-    app[const.MAILMAN] = settings['mailman_endpoint_url']
+    app[const.MAILMAN] = settings['srv.mailman']
 
     logger.info('Initializing public api endpoints')
     app.router.add_route('GET', '/healthcheck', healthcheck)

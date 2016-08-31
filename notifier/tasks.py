@@ -1,15 +1,17 @@
 import asyncio
+import aiohttp
 import logging
 from collections import namedtuple
 from functools import partial
 from pathlib import Path
+from urllib.parse import urljoin
 
 from . import translate, compare, mailer
 
 PROJECT_URL = 'https://webtranslateit.com/api/projects/{}.json'
 SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name}/locales/\
 {master_locale}..{other_locale}/strings/{string_id}'
-
+UPDATE_PATH = 'admin/refresh_wti'
 
 DiffError = namedtuple('DiffError', ['base', 'other', 'diff', 'section_link', 'file_path', 'base_path', 'other_path'])
 UrlError = namedtuple('UrlError', ['url', 'status_code', 'section_link', 'file_path', 'locale'])
@@ -36,7 +38,7 @@ def filter_filename(files, file_id):
 
 
 @asyncio.coroutine
-def compare_with_master(wti_key, mailman_client, string_id, payload, content_type, email_cms_host):
+def compare_with_master(wti_key, mailman_host, string_id, payload, content_type):
     # TODO refactor
     project = yield from translate.project(wti_key)
     if not project:
@@ -63,7 +65,7 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
         url_errors = list(map(partial(_make_url_error, base, other, filename, master_locale, other_locale, section_link),
                               url_diffs))
         logger.info(topic)
-        result = yield from mailer.send(mailman_client, user_email, [], url_errors, content_type, topic)
+        result = yield from mailer.send(mailman_host, user_email, [], url_errors, content_type, topic)
         if result:
             logger.info('sending email to agent %s', user_id)
         else:
@@ -86,14 +88,16 @@ def compare_with_master(wti_key, mailman_client, string_id, payload, content_typ
             logger.info(topic)
             if user.get('role') != 'manager':
                 yield from translate.change_status(wti_key, payload['locale'], string_id, other)
-            result = yield from mailer.send(mailman_client, user_email, [error], [], content_type, topic)
+            result = yield from mailer.send(mailman_host, user_email, [error], [], content_type, topic)
             if result:
                 logger.info('sending email to agent %s', user_id)
             else:
                 logger.error('unable to notify agent %s', user_id)
         else:
-            # yield from aiohttp.request('PUT', email_cms_host)
-            pass
+            logger.debug('sending refresh to mailman')
+            url = urljoin(mailman_host, UPDATE_PATH.lstrip('/'))
+            res = yield from aiohttp.request('PUT', url)
+            yield from res.release()
 
 
 @asyncio.coroutine

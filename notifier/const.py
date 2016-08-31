@@ -1,6 +1,5 @@
 MASTER_LOCALE = 'master_locale'
 WTI_KEYS = 'wti_keys'
-EMAIL_CMS = 'srv.email_cms'
 MAILMAN = 'srv.mailman'
 
 ASYNC_WORKER = 'async_worker'

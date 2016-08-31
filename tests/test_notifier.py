@@ -28,7 +28,6 @@ class TestNewTranslation(AsyncTestCase):
         req.GET = {'wti_apikey': 'key42'} if req_query_params is None else req_query_params
         req.app = {
             const.ASYNC_WORKER: worker.Worker(self.loop),
-            const.EMAIL_CMS: 'url',
             const.MAILMAN: 'url'
         }
 
