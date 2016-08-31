@@ -10,7 +10,7 @@ from pybars import Compiler
 from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
-SEND_EMAIL_PATH = 'sender/send'
+SEND_EMAIL_PATH = 'emails/send_raw'
 
 
 def _inner_html(html):
@@ -68,6 +68,7 @@ def send(mailman_host, user_email, diffs, url_errors, content_type, topic=None):
 
     try:
         url = urljoin(mailman_host, SEND_EMAIL_PATH.lstrip('/'))
+        logger.debug('sending email request to %s', url)
         res = yield from asyncio.wait_for(aiohttp.request('post', url, data=json.dumps(message)), 5)
         if res.status != 200:
             msg = yield from res.read()
