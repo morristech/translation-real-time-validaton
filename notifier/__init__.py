@@ -31,7 +31,10 @@ def new_translation(req):
 
     payload = json.loads(data['payload'])
     try:
-        translation = payload.get('translation')
+        if isinstance(payload, list):
+            translation = payload[0].get('translation')
+        else:
+            translation = payload.get('translation')
     except AttributeError:
         logger.exception('got unexpected data %s', payload)
         return web.Response()
