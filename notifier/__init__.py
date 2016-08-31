@@ -9,6 +9,17 @@ from . import const, tasks, worker
 logger = logging.getLogger(__name__)
 
 
+def _check_translation(req, data, wti_key):
+    translation = data.get('translation')
+    if translation is None or translation.get('status') != 'status_proofread':
+        return
+    logger.info('translating project_id: %s, user_id: %s', data['project_id'], data['user_id'])
+    string_id = data['string_id']
+    content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
+    mailman_url = req.app[const.MAILMAN]
+    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mailman_url, string_id, data, content_type)
+
+
 @asyncio.coroutine
 def new_translation(req):
     """
@@ -32,20 +43,14 @@ def new_translation(req):
     payload = json.loads(data['payload'])
     try:
         if isinstance(payload, list):
-            translation = payload[0].get('translation')
+            translations = [p for p in payload]
         else:
-            translation = payload.get('translation')
+            translations = [payload]
     except AttributeError:
         logger.exception('got unexpected data %s', payload)
         return web.Response()
-    if translation is None or translation.get('status') != 'status_proofread':
-        return web.Response()
-    logger.info('translating project_id: %s, user_id: %s', payload['project_id'], payload['user_id'])
-    string_id = payload['string_id']
-    content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
-    mailman_url = req.app[const.MAILMAN]
-    req.app[const.ASYNC_WORKER].start(
-        tasks.compare_with_master, wti_key, mailman_url, string_id, payload, content_type)
+    for translation in translations:
+        _check_translation(req, translation, wti_key)
     return web.Response()
 
 
