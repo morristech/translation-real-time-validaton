@@ -14,7 +14,7 @@ SEND_EMAIL_PATH = 'sender/send'
 
 
 def _inner_html(html):
-    soup = BeautifulSoup(html).body
+    soup = BeautifulSoup(html, "lxml").body
     return ''.join(map(lambda t: str(t), soup.contents))
 
 
@@ -77,7 +77,7 @@ def send(mailman_host, user_email, diffs, url_errors, content_type, topic=None):
             yield from res.release()
             return True
     except asyncio.TimeoutError:
-        logging.error('Request to %s took more then 5s to finish, dropping', mailman_endpoint)
+        logging.error('Request to %s took more then 5s to finish, dropping', mailman_host)
     except aiohttp.ClientOSError:
-        logging.error('Request to %s failed', mailman_endpoint)
+        logging.error('Request to %s failed', mailman_host)
     return False
