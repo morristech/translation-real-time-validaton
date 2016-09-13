@@ -4,7 +4,7 @@ import asyncio
 import json
 from aiohttp import web
 
-from . import const, tasks, worker
+from . import const, tasks, worker, sendgrid
 
 logger = logging.getLogger(__name__)
 
@@ -13,11 +13,13 @@ def _check_translation(req, data, wti_key):
     translation = data.get('translation')
     if translation is None or translation.get('status') != 'status_proofread':
         return
-    logger.info('translating project_id: %s, user_id: %s', data['project_id'], data['user_id'])
+    logger.info('translating project_id: %s, user_id: %s',
+                data['project_id'], data['user_id'])
     string_id = data['string_id']
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
-    mailman_url = req.app[const.MAILMAN]
-    req.app[const.ASYNC_WORKER].start(tasks.compare_with_master, wti_key, mailman_url, string_id, data, content_type)
+    email_provider = req.app[const.EMAIL_PROVIDER]
+    req.app[const.ASYNC_WORKER].start(
+        tasks.compare_with_master, wti_key, email_provider, string_id, data, content_type)
 
 
 @asyncio.coroutine
@@ -63,12 +65,12 @@ def project(req):
     @apiParam {string} api_key
     @apiParam (POST Parameters) {string} email email to notify
     """
-    api_key = req.match_info['api_key']
-    params = yield from req.post()
-    user_email = params['email']
-    mailman_endpoint = req.app[const.MAILMAN]
+    # api_key = req.match_info['api_key']
+    # params = yield from req.post()
+    # user_email = params['email']
 
-    req.app[const.ASYNC_WORKER].start(tasks.validate_project, api_key, mailman_endpoint, user_email)
+    # req.app[const.ASYNC_WORKER].start(
+    #     tasks.validate_project, api_key, mailman_endpoint, user_email)
 
     return web.Response()
 
@@ -89,7 +91,13 @@ def app(global_config, **settings):
 
     app = web.Application(logger=logger, loop=loop)
     app[const.ASYNC_WORKER] = worker.Worker(loop)
-    app[const.MAILMAN] = settings['srv.mailman']
+    app[const.EMAIL_PROVIDER] = sendgrid.SendgridProvider(
+        settings['sendgrid.user'],
+        settings['sendgrid.password'],
+        settings['from.email'],
+        settings['from.name'],
+        loop=loop
+    )
 
     logger.info('Initializing public api endpoints')
     app.router.add_route('GET', '/healthcheck', healthcheck)

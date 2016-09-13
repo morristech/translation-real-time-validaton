@@ -3,11 +3,9 @@ import inlinestyler.utils as inline_styler
 import markdown
 import logging
 import asyncio
-import json
 import os.path
 import aiohttp
 from pybars import Compiler
-from urllib.parse import urljoin
 
 logger = logging.getLogger(__name__)
 SEND_EMAIL_PATH = 'emails/send_raw'
@@ -44,7 +42,7 @@ def _parse_diff_error(diff, content_type):
 
 
 @asyncio.coroutine
-def send(mailman_host, user_email, diffs, url_errors, content_type, topic=None):
+def send(mail_client, user_email, diffs, url_errors, content_type, topic=None):
     template_source = _read_template_file('base_error.hbs')
 
     template = Compiler().compile(template_source)({
@@ -54,22 +52,16 @@ def send(mailman_host, user_email, diffs, url_errors, content_type, topic=None):
     })
     email_body = inline_styler.inline_css(template)
     message = {
-        'from_addr': 'no-reply@getkeepsafe.com',
-        'from_name': 'KeepSafe Translation Verifier',
         'subject': topic or 'Translations not passing the validation test',
         'html': email_body,
-        'text': 'only html body is available, please enable html in your emails',
         'to': user_email,
         'cc': ['philipp+content-validator@getkeepsafe.com'],
         'bcc': ['tomek+content-validator@getkeepsafe.com']
     }
     if content_type == 'java':
         message['bcc'].append('hilal+content-validator@getkeepsafe.com')
-
     try:
-        url = urljoin(mailman_host, SEND_EMAIL_PATH.lstrip('/'))
-        logger.debug('sending email request to %s', url)
-        res = yield from asyncio.wait_for(aiohttp.request('post', url, data=json.dumps(message)), 5)
+        res = yield from mail_client.send(**message)
         if res.status != 200:
             msg = yield from res.read()
             logger.error('unable to send email, status: %s, message: %s', res.status, msg)
@@ -77,8 +69,6 @@ def send(mailman_host, user_email, diffs, url_errors, content_type, topic=None):
         else:
             yield from res.release()
             return True
-    except asyncio.TimeoutError:
-        logging.error('Request to %s took more then 5s to finish, dropping', mailman_host)
     except aiohttp.ClientOSError:
-        logging.error('Request to %s failed', mailman_host)
+        logging.error('Request to sendgrid failed')
     return False

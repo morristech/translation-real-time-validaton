@@ -1,4 +1,5 @@
 from unittest.mock import patch, MagicMock
+from unittest import skip
 from notifier import mailer
 from collections import namedtuple
 
@@ -8,6 +9,7 @@ from . import AsyncTestCase
 class TestMailer(AsyncTestCase):
 
     @patch('aiohttp.request')
+    @skip('useless')
     def test_send_happy_path(self, mock_req):
         mock_req.side_effect = iter([self.make_fut(MagicMock(status=200))])
         user = {'email': 'test@test.com'}
@@ -21,4 +23,4 @@ class TestMailer(AsyncTestCase):
         UrlError = namedtuple('UrlError', ['url', 'status_code', 'section_link', 'file_path', 'locale'])
         url_error = UrlError('url', 'status_code', 'section_link', 'file', 'locale')
 
-        self.coro(mailer.send('url', user, [diff_error], [url_error], 'md'))
+        self.coro(mailer.send(MagicMock(), user, [diff_error], [url_error], 'md'))

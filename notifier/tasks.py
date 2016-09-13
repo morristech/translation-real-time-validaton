@@ -1,10 +1,8 @@
 import asyncio
-import aiohttp
 import logging
 from collections import namedtuple
 from functools import partial
 from pathlib import Path
-from urllib.parse import urljoin
 
 from . import translate, compare, mailer
 
@@ -38,7 +36,7 @@ def filter_filename(files, file_id):
 
 
 @asyncio.coroutine
-def compare_with_master(wti_key, mailman_host, string_id, payload, content_type):
+def compare_with_master(wti_key, mail_client, string_id, payload, content_type):
     # TODO refactor
     project = yield from translate.project(wti_key)
     if not project:
@@ -65,12 +63,11 @@ def compare_with_master(wti_key, mailman_host, string_id, payload, content_type)
         url_errors = list(map(partial(_make_url_error, base, other, filename, master_locale, other_locale, section_link),
                               url_diffs))
         logger.info(topic)
-        result = yield from mailer.send(mailman_host, user_email, [], url_errors, content_type, topic)
+        result = yield from mailer.send(mail_client, user_email, [], url_errors, content_type, topic)
         if result:
             logger.info('sending email to agent %s', user_id)
         else:
             logger.error('unable to notify agent %s', user_id)
-
     elif filename_ext == '.strings':
         return
     else:
@@ -88,20 +85,15 @@ def compare_with_master(wti_key, mailman_host, string_id, payload, content_type)
             logger.info(topic)
             if user.get('role') != 'manager':
                 yield from translate.change_status(wti_key, payload['locale'], string_id, other)
-            result = yield from mailer.send(mailman_host, user_email, [error], [], content_type, topic)
+            result = yield from mailer.send(mail_client, user_email, [error], [], content_type, topic)
             if result:
                 logger.info('sending email to agent %s', user_id)
             else:
                 logger.error('unable to notify agent %s', user_id)
-        else:
-            logger.debug('sending refresh to mailman')
-            url = urljoin(mailman_host, UPDATE_PATH.lstrip('/'))
-            res = yield from aiohttp.request('PUT', url)
-            yield from res.release()
 
 
 @asyncio.coroutine
-def validate_project(wti_key, mailman_client, user_email):
+def validate_project(wti_key, mail_client, user_email):
     project = yield from translate.project(wti_key)
     locales = project.locales
     strings = yield from translate.strings(wti_key)
@@ -113,4 +105,4 @@ def validate_project(wti_key, mailman_client, user_email):
             error = yield from compare.diff(base.text, translation.text)
             if error:
                 errors.append(error)
-    yield from mailer.send(mailman_client, user_email, errors, [])
+    yield from mailer.send(mail_client, user_email, errors, [])
