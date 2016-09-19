@@ -21,6 +21,7 @@ def _make_url_error(base, other, file_path, master_locale, other_locale, section
     return UrlError(
         url=url_diff.url,
         status_code=url_diff.status_code,
+        has_disallowed_chars=url_diff.has_disallowed_chars,
         section_link=section_link,
         file_path=file_path,
         locale=locale
