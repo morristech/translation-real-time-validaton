@@ -9,33 +9,23 @@ from . import const, tasks, worker, sendgrid
 logger = logging.getLogger(__name__)
 
 
-def _check_translation(req, data, wti_key):
-    translation = data.get('translation')
-    if translation is None or translation.get('status') != 'status_proofread':
-        return
-    logger.info('translating project_id: %s, user_id: %s',
-                data['project_id'], data['user_id'])
-    string_id = data['string_id']
-    content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
-    email_provider = req.app[const.EMAIL_PROVIDER]
-    req.app[const.ASYNC_WORKER].start(
-        tasks.compare_with_master, wti_key, email_provider, string_id, data, content_type)
-
-
 @asyncio.coroutine
 def new_translation(req):
     """
     @api {POST} /translations/?wti_apikey={}&type={} Validate translation
     @apiGroup Webhooks
     @apiDescription WTI webhook endpoint. Schedule translation validation task.
-    @apiParam {string} wti_apikey
-    @apiParam {string} type *OPTIONAL* Default: `md`. Supported: `md`, `ios`, `java`.
+    @apiParam (GET) {string} wti_apikey
+    @apiParam (GET) {string="ios","java","md"} [type=md]
     @apiParam (Request JSON) {string} payload WTI payload
 
     @apiError 400 Missing `wti_key` or `payload`
     """
+    email_provider = req.app[const.EMAIL_PROVIDER]
     data = yield from req.post()
+    content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
     wti_key = req.GET.get(const.REQ_APP_KEY)
+
     if not wti_key:
         logger.error('wti_key not in request query params ')
         return web.HTTPBadRequest()
@@ -51,8 +41,12 @@ def new_translation(req):
     except AttributeError:
         logger.exception('got unexpected data %s', payload)
         return web.Response()
+
     for translation in translations:
-        _check_translation(req, translation, wti_key)
+        logger.info('translating project_id: %s, user_id: %s',
+                    data['project_id'], data['user_id'])
+        req.app[const.ASYNC_WORKER].start(
+            tasks.validate_translation, wti_key, email_provider, translation, content_type)
     return web.Response()
 
 
