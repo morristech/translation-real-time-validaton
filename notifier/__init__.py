@@ -43,10 +43,11 @@ def new_translation(req):
         return web.Response()
 
     for translation in translations:
-        logger.info('translating project_id: %s, user_id: %s',
-                    translation['project_id'], translation['user_id'])
-        req.app[const.ASYNC_WORKER].start(
-            tasks.validate_translation, wti_key, email_provider, translation, content_type)
+        if translation:
+            logger.info('translating project_id: %s, user_id: %s',
+                        translation['project_id'], translation['user_id'])
+            req.app[const.ASYNC_WORKER].start(
+                tasks.validate_translation, wti_key, email_provider, translation, content_type)
     return web.Response()
 
 
