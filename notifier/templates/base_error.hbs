@@ -11,46 +11,57 @@
     </p>
 </div>
 
-{{#if url_errors}}
-<h2>Broken URLs</h2>
-    <ol>
-    {{#each url_errors}}
-        <li>
-            <code>{{url}}</code><br/>
-            Status: <b>{{status_code}}</b><br/>
-            Has disallowed chars: <b>{{#if has_disallowed_chars}}Yes{{else}}None{{/if}}</b></br>
-            File <b>{{file_path}}</b>, locale <b>{{locale}}</b><br/>
-            <a href="{{section_link}}" target="_blank">Go to section</a>
-        </li>
-    {{/each}}
-    </ol>
-{{/if}}
-
-{{#each diff_errors}}
-    <table class="diff" id="difflib_chg_to4__top"
-           cellspacing="0" cellpadding="0" rules="groups" width="600">
-        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
-        <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
-
-        <thead>
-        <tr><td width="100%" id="file_path" colspan="2"></td></tr>
-        <tr><td width="50%" id="left_path">{{left_path}}</td><td width="50%" id="right_path">{{right_path}}</td></tr>
-        </thead>
-
-        <tbody>
-        <tr><td width="50%"><p id="left_html">{{{left_html}}}</p></td><td width="50%"><p id="right_html">{{{right_html}}}</p></td></tr>
-        <tr>{{#if left_diff}}<td width="50%"><p id="left_diff">{{{left_diff}}}</p></td>{{/if}}{{#if right_diff}}<td width="50%"><p id="right_diff">{{{right_diff}}}</p></td>{{/if}}</tr>
-        </tbody>
-    </table>
-
-    <div id="error_messages">
-        {{#each error_messages}}
-            {{.}}<br/>
+{{#each segments}}
+    {{#if url_errors}}
+    <h2>Broken URLs</h2>
+        <ol>
+        {{#each url_errors}}
+            <li>
+                <code>{{url}}</code><br/>
+                Status: <b>{{status_code}}</b><br/>
+                Has disallowed chars: <b>{{#if has_disallowed_chars}}Yes{{else}}No{{/if}}</b></br>
+                File <b>{{../filename}}</b>, locale <b>{{../locale}}</b><br/>
+                <a href="{{../section_link}}" target="_blank">Go to section</a>
+            </li>
         {{/each}}
-    </div>
+        </ol>
+    {{/if}}
 
-    <a id="section_link" href="{{section_link}}" target="_blank">Go to section</a>
-    <br/>
-    <hr>
-    <br/>
+    {{#each diff_errors}}
+        <table class="diff" id="difflib_chg_to4__top"
+               cellspacing="0" cellpadding="0" rules="groups" width="600">
+            <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+            <colgroup></colgroup> <colgroup></colgroup> <colgroup></colgroup>
+
+            <thead>
+            <tr><td width="100%" id="file_path" colspan="2"></td></tr>
+            <tr>
+                <td width="50%" id="left_path">File {{../filename}} Language {{../base_locale}}</td>
+                <td width="50%" id="right_path">Language {{../locale}}</td>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr>
+                <td width="50%"><p id="left_html">{{{base_html}}}</p></td>
+                <td width="50%"><p id="right_html">{{{other_html}}}</p></td>
+            </tr>
+            <tr>
+                {{#if base_diff}}<td width="50%"><p id="left_diff">{{{base_diff}}}</p></td>{{/if}}
+                {{#if other_diff}}<td width="50%"><p id="right_diff">{{{other_diff}}}</p></td>{{/if}}
+            </tr>
+            </tbody>
+        </table>
+
+        <div id="error_messages">
+            {{#each error_messages}}
+                {{.}}<br/>
+            {{/each}}
+        </div>
+
+        <a id="section_link" href="{{section_link}}" target="_blank">Go to section</a>
+        <br/>
+        <hr>
+        <br/>
+    {{/each}}
 {{/each}}

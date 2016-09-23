@@ -44,7 +44,7 @@ class TestNewTranslation(AsyncTestCase):
 
     @patch('aiohttp.request')
     @patch('notifier.mailer.send')
-    @patch('notifier.tasks.translate.change_status')
+    @patch('notifier.tasks.wti.change_status')
     def test_success(self, mock_status, mock_mailer, mock_get):
         res = self._test(mock_get, '#aaaaa')
 
@@ -54,7 +54,7 @@ class TestNewTranslation(AsyncTestCase):
 
     @patch('aiohttp.request')
     @patch('notifier.tasks.mailer.send')
-    @patch('notifier.tasks.translate.change_status')
+    @patch('notifier.tasks.wti.change_status')
     def test_fail(self, mock_status, mock_mailer, mock_get):
         res = self._test(mock_get, '##bbbb')
 

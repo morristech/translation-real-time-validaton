@@ -15,21 +15,14 @@ strings_url_pattern = 'https://webtranslateit.com/api/projects/{api_key}/strings
 Locales = namedtuple('Locales', ['source', 'targets'])
 Project = namedtuple('Project', ['locales', 'files', 'name', 'id'])
 String = namedtuple('String', ['id', 'file_id'])
-TranslationString = namedtuple('TranslationString', ['id', 'locale', 'text'])
-TranslationSegment = namedtuple('TranslationSegment',
-                                ['locale_base', 'locale_other',
-                                 'content_base', 'content_other', 'content_type',
-                                 'filename', 'filename_ext',
-                                 'project_id', 'project_name',
-                                 'user_id', 'user_email',
-                                 'errors'])
+Translation = namedtuple('Translation', ['id', 'locale', 'text'])
 
 
 def string(api_key, locale, string_id):
     url = translation_url_pattern.format(api_key=api_key, locale=locale, string_id=string_id)
     res = yield from aiohttp.request('get', url)
     data = yield from res.json()
-    return TranslationString(id=string_id, locale=locale, text=data.get('text', ''))
+    return Translation(id=string_id, locale=locale, text=data.get('text', ''))
 
 
 def strings(api_key):
