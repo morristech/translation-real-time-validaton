@@ -55,7 +55,7 @@ def send(mail_client, user_email, diffs, url_errors, content_type, topic=None):
         'subject': topic or 'Translations not passing the validation test',
         'html': email_body,
         'to': user_email,
-        'cc': ['philipp+content-validator@getkeepsafe.com'],
+        'cc': ['julie+content-validator@getkeepsafe.com'],
         'bcc': ['tomek+content-validator@getkeepsafe.com']
     }
     if content_type == 'java':
@@ -64,7 +64,8 @@ def send(mail_client, user_email, diffs, url_errors, content_type, topic=None):
         res = yield from mail_client.send(**message)
         if res.status != 200:
             msg = yield from res.read()
-            logger.error('unable to send email, status: %s, message: %s', res.status, msg)
+            logger.error(
+                'unable to send email, status: %s, message: %s', res.status, msg)
             return False
         else:
             yield from res.release()
