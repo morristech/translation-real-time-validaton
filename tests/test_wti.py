@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
 from . import AsyncTestCase
-from notifier import translate
+from notifier import wti
 
 
 class TestTranslate(AsyncTestCase):
@@ -13,9 +13,9 @@ class TestTranslate(AsyncTestCase):
         })
         mock_get.return_value = self.make_fut(mock_json)
 
-        actual = self.coro(translate.string('key', 'locale', 'id'))
+        actual = self.coro(wti.string('key', 'locale', 'id'))
 
-        self.assertEqual(translate.Translation(id='id', locale='locale', text='test'), actual)
+        self.assertEqual(wti.Translation(id='id', locale='locale', text='test'), actual)
 
     @patch('aiohttp.request')
     def test_strings_happy_path(self, mock_get):
@@ -24,7 +24,7 @@ class TestTranslate(AsyncTestCase):
         mock_res.json.return_value = self.make_fut(data)
         mock_get.return_value = self.make_fut(mock_res)
 
-        strings = list(self.coro(translate.strings('api_kay')))
+        strings = list(self.coro(wti.strings('api_kay')))
 
         self.assertEqual(1, len(strings))
         actual = strings[0]
@@ -37,7 +37,7 @@ class TestTranslate(AsyncTestCase):
         mock_json.json.return_value = self.make_fut([{'user_id': 1, 'name': 'test1'}, {'user_id': 2, 'name': 'test2'}])
         mock_get.return_value = self.make_fut(mock_json)
 
-        actual = self.coro(translate.user('key', 2))
+        actual = self.coro(wti.user('key', 2))
 
         self.assertEqual({'user_id': 2, 'name': 'test2'}, actual)
 
@@ -47,7 +47,7 @@ class TestTranslate(AsyncTestCase):
         mock_json.json.return_value = self.make_fut([{'user_id': 1, 'name': 'test1'}, {'user_id': 2, 'name': 'test2'}])
         mock_get.return_value = self.make_fut(mock_json)
 
-        actual = self.coro(translate.user('key', 3))
+        actual = self.coro(wti.user('key', 3))
 
         self.assertEqual({}, actual)
 
@@ -57,7 +57,7 @@ class TestTranslate(AsyncTestCase):
         mock_res.status = 202
         mock_put.return_value = self.make_fut(mock_res)
 
-        actual = self.coro(translate.change_status('key', 3, 'locale', 'text'))
+        actual = self.coro(wti.change_status('key', 3, 'locale', 'text'))
 
         self.assertTrue(actual)
         (method, url), named = mock_put.call_args
@@ -78,7 +78,7 @@ class TestTranslate(AsyncTestCase):
         mock_res.json.return_value = self.make_fut(data)
         mock_get.return_value = self.make_fut(mock_res)
 
-        return self.coro(translate.project('api_kay'))
+        return self.coro(wti.project('api_kay'))
 
     @patch('aiohttp.request')
     def test_project_locales(self, mock_get):

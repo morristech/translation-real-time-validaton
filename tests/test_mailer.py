@@ -1,26 +1,23 @@
-from unittest.mock import patch, MagicMock
-from unittest import skip
-from notifier import mailer
-from collections import namedtuple
+from unittest.mock import MagicMock
+from notifier import mailer, segment, validators
 
 from . import AsyncTestCase
 
 
 class TestMailer(AsyncTestCase):
 
-    @patch('aiohttp.request')
-    @skip('useless')
-    def test_send_happy_path(self, mock_req):
-        mock_req.side_effect = iter([self.make_fut(MagicMock(status=200))])
-        user = {'email': 'test@test.com'}
-        diff_base = namedtuple('DiffBase', ['parsed', 'diff'])('parsed', 'diff')
-        diff = namedtuple('Diff', ['base', 'other', 'error_msgs'])(diff_base, diff_base, ['error'])
-        DiffError = namedtuple('DiffError', ['base', 'other', 'diff', 'base_path',
-                                             'other_path', 'file_path', 'section_link'])
-        diff_error = DiffError('base', 'other', diff, 'base_path',
-                               'other_path', 'file_path', 'section_link')
+    def test_send_happy_path(self):
+        mock_client = MagicMock()
+        mock_client.send.return_value = self.make_fut(MagicMock(status=200))
+        diff_error = validators.DiffError('<h1>a</h1>', '<h2>b</h2>', '#a', '##b', ['message'])
+        url_error = validators.UrlError('http://noope', 404, False)
+        translation = segment.TranslationSegment(string_id=1, status=None,
+                                                 content_type='md',
+                                                 locale='pl', content='<ins>##b</ins>',
+                                                 base_locale='en', base_content='<del>#a</del>',
+                                                 filename='filename', filename_ext='txt',
+                                                 project_id=2, project_name='Example',
+                                                 user_id=1, user_email='a@example.com', user_role=None,
+                                                 diff_errors=[diff_error], url_errors=[url_error])
 
-        UrlError = namedtuple('UrlError', ['url', 'status_code', 'section_link', 'file_path', 'locale'])
-        url_error = UrlError('url', 'status_code', 'section_link', 'file', 'locale')
-
-        self.coro(mailer.send(MagicMock(), user, [diff_error], [url_error], 'md'))
+        self.coro(mailer.send(mock_client, 'email', [translation], 'md'))
