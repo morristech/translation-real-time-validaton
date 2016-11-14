@@ -1,58 +1,109 @@
 import asyncio
 import logging
+from collections import namedtuple
+from functools import partial
+from pathlib import Path
 
-from .segment import build_segment, build_segment_from_payload
-from . import mailer, wti, validators
+from . import translate, compare, mailer
 
-TRANSLATION_EMAIL_TOPIC = 'Translations not passing the validation test - file {}, language {}, string_id {}'
-PROJECT_EMAIL_TOPIC = 'Project not passing the validation test - {}'
+PROJECT_URL = 'https://webtranslateit.com/api/projects/{}.json'
+SECTION_URL = 'https://webtranslateit.com/en/projects/{project_id}-{project_name}/locales/\
+{master_locale}..{other_locale}/strings/{string_id}'
+UPDATE_PATH = 'admin/refresh_wti'
 
+DiffError = namedtuple('DiffError', ['base', 'other', 'diff', 'section_link', 'file_path', 'base_path', 'other_path'])
+UrlError = namedtuple('UrlError', ['url', 'status_code', 'section_link', 'file_path', 'locale'])
 logger = logging.getLogger(__name__)
 
 
+def _make_url_error(base, other, file_path, master_locale, other_locale, section_link, url_diff):
+    locale = master_locale if url_diff.files == base else other_locale
+    return UrlError(
+        url=url_diff.url,
+        status_code=url_diff.status_code,
+        has_disallowed_chars=url_diff.has_disallowed_chars,
+        section_link=section_link,
+        file_path=file_path,
+        locale=locale
+    )
+
+
+def filter_filename(files, file_id):
+    filtered_files = list(filter(lambda f: f['id'] == file_id, files))
+    if not filtered_files:
+        logger.error('No file could be found for id {} in project files {}'.format(file_id, files))
+        return ''
+    return filtered_files[0].get('name')
+
+
 @asyncio.coroutine
-def validate_translation(wti_key, mail_client, translation_payload, content_type):
-    segment = yield from build_segment_from_payload(wti_key, translation_payload, content_type)
-    validator = validators.dispatch(segment)
-    if not validator:
-        logger.error('No validator found for segment:\n%s\nPayload:\n%s', segment, translation_payload)
+def compare_with_master(wti_key, mail_client, string_id, payload, content_type):
+    # TODO refactor
+    project = yield from translate.project(wti_key)
+    if not project:
         return
+    master_locale = project.locales.source
+    other_locale = payload['locale']
+    base_string = yield from translate.string(wti_key, master_locale, string_id)
+    base = base_string.text
+    other = payload['translation']['text']
+    filename = filter_filename(project.files, payload['file_id'])
+    filename_ext = Path(filename).suffix
+    section_link = SECTION_URL.format(project_id=project.id, project_name=project.name,
+                                      master_locale=master_locale, other_locale=other_locale,
+                                      string_id=payload['string_id'])
+    user_id = payload['user_id']
+    user = yield from translate.user(wti_key, user_id)
+    user_email = user.get('email')
+    topic = 'Translations not passing the validation test - file {}, language {}, string_id {}'.format(filename,
+                                                                                                       other_locale,
+                                                                                                       string_id)
 
-    valid = yield from validator(segment).validate()
-    if not valid:
-        if validator.notify_agent:
-            topic = TRANSLATION_EMAIL_TOPIC.format(segment.filename, segment.locale, segment.string_id)
+    if content_type == 'ios' and filename_ext == '.txt':
+        url_diffs = compare.urls(base, other)
+        url_errors = list(map(partial(_make_url_error, base, other, filename, master_locale, other_locale, section_link),
+                              url_diffs))
+        logger.info(topic)
+        result = yield from mailer.send(mail_client, user_email, [], url_errors, content_type, topic)
+        if result:
+            logger.info('sending email to agent %s', user_id)
+        else:
+            logger.error('unable to notify agent %s', user_id)
+    elif filename_ext == '.strings':
+        return
+    else:
+        diff = yield from compare.diff(base, other, content_type)
+        if diff:
+            error = DiffError(
+                base=base,
+                other=other,
+                diff=diff[0],
+                section_link=section_link,
+                file_path='File: {}'.format(filename),
+                base_path='Language: {}'.format(master_locale),
+                other_path='Language: {}'.format(other_locale)
+            )
             logger.info(topic)
-            result = yield from mailer.send(mail_client, segment.user_email,
-                                            [segment], segment.content_type, topic)
+            if user.get('role') != 'manager':
+                yield from translate.change_status(wti_key, payload['locale'], string_id, other)
+            result = yield from mailer.send(mail_client, user_email, [error], [], content_type, topic)
             if result:
-                logger.info('sending email to agent %s', segment.user_id)
+                logger.info('sending email to agent %s', user_id)
             else:
-                logger.error('unable to notify agent %s', segment.user_id)
-
-        if validator.change_status:
-            if segment.user_role != 'manager':
-                yield from wti.change_status(wti_key, segment.locale, segment.string_id, segment.content)
+                logger.error('unable to notify agent %s', user_id)
 
 
 @asyncio.coroutine
-def validate_project(wti_key, mail_client, user_email, content_type='md'):
-    project = yield from wti.project(wti_key)
+def validate_project(wti_key, mail_client, user_email):
+    project = yield from translate.project(wti_key)
     locales = project.locales
-    strings = yield from wti.strings(wti_key)
-    invalid_segments = []
+    strings = yield from translate.strings(wti_key)
+    errors = []
     for string in strings:
-        base = yield from wti.string(wti_key, locales.source, string.id)
+        base = yield from translate.string(wti_key, locales.source, string.id)
         for locale in locales.targets:
-            translation = yield from wti.string(wti_key, locale, string.id)
-            segment = build_segment(project, string, base, translation)
-            validator = validators.dispatch(segment)
-            if not validator:
-                logger.error('No validator found during validating project %s (%s), segment:\n%s',
-                             project.name, segment)
-                return
-            valid = yield from validator(segment).validate()
-            if not valid:
-                invalid_segments.append(segment)
-    topic = PROJECT_EMAIL_TOPIC.format(project.name)
-    yield from mailer.send(mail_client, user_email, invalid_segments, content_type, topic)
+            translation = yield from translate.string(wti_key, locale, string.id)
+            error = yield from compare.diff(base.text, translation.text)
+            if error:
+                errors.append(error)
+    yield from mailer.send(mail_client, user_email, errors, [])
