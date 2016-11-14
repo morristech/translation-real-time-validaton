@@ -1,0 +1,18 @@
+[
+    {
+        "type": "membership",
+        "id": 34460,
+        "user_id": 19362,
+        "email": "test_test@gmail.com",
+        "name": "",
+        "role": "manager",
+        "locale": "pl",
+        "status": "",
+        "suggested_locale": "",
+        "proofreader": true,
+        "super_proofreader": true,
+        "member_since": "2014-09-05T12:51:51Z",
+        "invitation_link": "",
+        "avatar": "https://secure.gravatar.com/avatar/8ddb81f2b87887cb3a1b325666f67a45.png?d=identicon&r=PG"
+    }
+]
