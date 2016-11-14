@@ -1,87 +1,10 @@
 import logging
-import logging.handlers
 import asyncio
-import json
 from aiohttp import web
 
-from . import const, tasks, worker, sendgrid
+from . import const, mailer, routes
 
 logger = logging.getLogger(__name__)
-
-
-def _check_translation(req, data, wti_key):
-    translation = data.get('translation')
-    if translation is None or translation.get('status') != 'status_proofread':
-        return
-    logger.info('translating project_id: %s, user_id: %s',
-                data['project_id'], data['user_id'])
-    string_id = data['string_id']
-    content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
-    email_provider = req.app[const.EMAIL_PROVIDER]
-    req.app[const.ASYNC_WORKER].start(
-        tasks.compare_with_master, wti_key, email_provider, string_id, data, content_type)
-
-
-@asyncio.coroutine
-def new_translation(req):
-    """
-    @api {POST} /translations/?wti_apikey={}&type={} Validate translation
-    @apiGroup Webhooks
-    @apiDescription WTI webhook endpoint. Schedule translation validation task.
-    @apiParam {string} wti_apikey
-    @apiParam {string} type *OPTIONAL* Default: `md`. Supported: `md`, `ios`, `java`.
-    @apiParam (Request JSON) {string} payload WTI payload
-
-    @apiError 400 Missing `wti_key` or `payload`
-    """
-    data = yield from req.post()
-    wti_key = req.GET.get(const.REQ_APP_KEY)
-    if not wti_key:
-        logger.error('wti_key not in request query params ')
-        return web.HTTPBadRequest()
-    if 'payload' not in data:
-        return web.HTTPBadRequest()
-
-    payload = json.loads(data['payload'])
-    try:
-        if isinstance(payload, list):
-            translations = [p for p in payload]
-        else:
-            translations = [payload]
-    except AttributeError:
-        logger.exception('got unexpected data %s', payload)
-        return web.Response()
-    for translation in translations:
-        _check_translation(req, translation, wti_key)
-    return web.Response()
-
-
-@asyncio.coroutine
-def project(req):
-    """
-    @api {POST} /projects/{api_key} Validate
-    @apiGroup Projects
-    @apiDescription Schedule project validation and notify via provided email.
-    @apiParam {string} api_key
-    @apiParam (POST Parameters) {string} email email to notify
-    """
-    # api_key = req.match_info['api_key']
-    # params = yield from req.post()
-    # user_email = params['email']
-
-    # req.app[const.ASYNC_WORKER].start(
-    #     tasks.validate_project, api_key, mailman_endpoint, user_email)
-
-    return web.Response()
-
-
-@asyncio.coroutine
-def healthcheck(req):
-    """
-    @api {GET} /healthcheck Healthcheck
-    @apiGroup Healthcheck
-    """
-    return web.Response()
 
 
 def app(global_config, **settings):
@@ -90,18 +13,8 @@ def app(global_config, **settings):
     loop.set_debug(False)
 
     app = web.Application(logger=logger, loop=loop)
-    app[const.ASYNC_WORKER] = worker.Worker(loop)
-    app[const.EMAIL_PROVIDER] = sendgrid.SendgridProvider(
-        settings['sendgrid.user'],
-        settings['sendgrid.password'],
-        settings['from.email'],
-        settings['from.name'],
-        loop=loop
-    )
-
-    logger.info('Initializing public api endpoints')
-    app.router.add_route('GET', '/healthcheck', healthcheck)
-    app.router.add_route('POST', '/projects/{api_key}', project)
-    app.router.add_route('POST', '/translations', new_translation)
+    app[const.SETTINGS] = settings
+    app[const.EMAIL_PROVIDER] = mailer.SendgridProvider(settings)
+    routes.init(app.router)
 
     return app

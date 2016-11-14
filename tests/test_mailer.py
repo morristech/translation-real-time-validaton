@@ -1,26 +1,53 @@
-from unittest.mock import patch, MagicMock
-from unittest import skip
-from notifier import mailer
-from collections import namedtuple
+from unittest.mock import MagicMock
 
+from notifier import mailer, const
+from notifier.model import *
+from validator.errors import *
 from . import AsyncTestCase
 
 
 class TestMailer(AsyncTestCase):
+    def setUp(self):
+        super().setUp()
+        self.app = self.make_app()
+        self.app[const.EMAIL_PROVIDER] = self.provider = MagicMock()
+        self.provider.send.return_value = self.make_fut()
+        self.user = WtiUser('dummy_id', 'dummy_email', WtiUserRoles.translator)
 
-    @patch('aiohttp.request')
-    @skip('useless')
-    def test_send_happy_path(self, mock_req):
-        mock_req.side_effect = iter([self.make_fut(MagicMock(status=200))])
-        user = {'email': 'test@test.com'}
-        diff_base = namedtuple('DiffBase', ['parsed', 'diff'])('parsed', 'diff')
-        diff = namedtuple('Diff', ['base', 'other', 'error_msgs'])(diff_base, diff_base, ['error'])
-        DiffError = namedtuple('DiffError', ['base', 'other', 'diff', 'base_path',
-                                             'other_path', 'file_path', 'section_link'])
-        diff_error = DiffError('base', 'other', diff, 'base_path',
-                               'other_path', 'file_path', 'section_link')
+    def test_send_happy_path(self):
+        diff = DiffError(None, None, 'section link')
+        self.coro(mailer.send(self.app, self.user, diff))
+        html = self.provider.send.call_args[0][1]
+        self.assertTrue('class="section-link"' in html)
 
-        UrlError = namedtuple('UrlError', ['url', 'status_code', 'section_link', 'file_path', 'locale'])
-        url_error = UrlError('url', 'status_code', 'section_link', 'file', 'locale')
+    def test_url_errors(self):
+        url = UrlDiff('dummy_url', [], 404)
+        diff = DiffError([url], None, 'section link')
+        self.coro(mailer.send(self.app, self.user, diff))
+        html = self.provider.send.call_args[0][1]
+        self.assertTrue('class="url-errors"' in html)
 
-        self.coro(mailer.send(MagicMock(), user, [diff_error], [url_error], 'md'))
+    def test_md_error(self):
+        base = ContentData('original1', 'parsed1', 'diff1')
+        other = ContentData('original2', 'parsed2', 'diff2')
+        md = MdDiff(base, other, [])
+        diff = DiffError(None, md, 'section link')
+        self.coro(mailer.send(self.app, self.user, diff))
+        html = self.provider.send.call_args[0][1]
+        self.assertTrue('class="diff"' in html)
+
+
+class TestProvider(AsyncTestCase):
+    def setUp(self):
+        super().setUp()
+        self.provider = mailer.SendgridProvider({
+            'sendgrid.user': 'user',
+            'sendgrid.password': 'password',
+            'from.email': 'from email',
+            'from.name': 'from name',
+            'email.subject': 'subject'
+        })
+
+    def test_happy_path(self):
+        self.coro(self.provider.send('test@test.com', 'html'))
+        self.assertTrue(self.mock_session_post.called)

@@ -1,0 +1,25 @@
+{
+    "string_id": 7266198,
+    "user_id": 19362,
+    "file_id": 395411,
+    "locale": "pl",
+    "project_id": 9800,
+    "api_url": "https://webtranslateit.com/api/projects/A2fgb3QGvixmwyPM-Twinw/files/395411/locales/pl",
+    "translation": {
+        "id": 22680710,
+        "updated_at": "2015-01-22T01:10:14Z",
+        "locale": "pl",
+        "version": 19,
+        "string": {
+            "type": "String",
+            "id": 7266198,
+            "dev_comment": "After the user activate his trial period",
+            "key": "subject",
+            "plural": false,
+            "status": "Current"
+        },
+        "created_at": "2015-01-21T17:16:39Z",
+        "status": "status_proofread",
+        "text": "#aaaa"
+    }
+}
