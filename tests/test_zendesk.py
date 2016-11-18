@@ -19,9 +19,16 @@ class TestZendesk(AsyncTestCase):
             'dc.auto_reply_welcome_take_survey', 'dc.makro_password-change_password', 'dc.auto_reply_subject_line',
             'dc.notify_requester_of_comment_update', 'dc.makro_bug-force_close', 'dc.url_tutorial',
             'dc.auto_reply_check_tutorial', 'dc.makro_bug-sorry_about_the_migration_we_will_send_a_tool',
-            'dc.url_survey', 'dc.auto_reply_update_to_latest_verson'
+            'dc.url_survey'
         ]
         self.mock_session().request.side_effect = iter([self.make_res(read_fixture('zendesk_items.json'))])
+        items = self.coro(self.client.items(self.locales))
+        self.assertCountEqual(expected, items.keys())
+
+    def test_items_pagination(self):
+        expected = ['dc.auto_reply_update_to_latest_verson', 'dc.auto_reply_check_tutorial']
+        self.mock_session().request.side_effect = iter(
+            [self.make_res(read_fixture('zendesk_item_page.json')), self.make_res(read_fixture('zendesk_item.json'))])
         items = self.coro(self.client.items(self.locales))
         self.assertCountEqual(expected, items.keys())
 

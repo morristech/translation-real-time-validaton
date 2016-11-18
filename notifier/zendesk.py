@@ -58,12 +58,18 @@ class ZendeskDynamicContent:
         return ZendeskItem(item['id'], text, variants)
 
     async def items(self, zendesk_locales):
-        data = await self._get_data(self.ITEMS_PATH)
-        items = data['items']
+        next_page = self.ITEMS_PATH
         result = {}
-        for item in items:
-            key = self._extract_key(item)
-            result[key] = self._extract_item(item, zendesk_locales)
+        for i in range(15):
+            data = await self._get_data(next_page)
+            items = data['items']
+            for item in items:
+                key = self._extract_key(item)
+                result[key] = self._extract_item(item, zendesk_locales)
+            next_page = data.get('next_page')
+            if not next_page:
+                break
+        logger.debug('got %s items from zendesk', len(result))
         return result
 
     async def update(self, dc_item, translations, zendesk_locales):

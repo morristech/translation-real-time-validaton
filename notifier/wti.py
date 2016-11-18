@@ -19,24 +19,29 @@ class WtiClient:
     def __init__(self, api_key):
         self._api_key = api_key
 
+    async def _handle_response(self, res):
+        if res.status == 200:
+            data = await res.json()
+            return data
+        elif res.status in [502, 503]:
+            await res.release()
+            logger.warning('wti request timed out for url:%s', url)
+            return {}
+        elif res.status == 404:
+            await res.release()
+            logger.error('unable to get data from url:%s', url)
+            return {}
+        else:
+            msg = await res.read()
+            raise WtiError('unable to connect to wti, status: %s, message:%s' % (res.status, msg))
+
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)
+        # TODO handle pagination
         with aiohttp.ClientSession() as session:
             res = await session.get(url)
-            if res.status == 200:
-                data = await res.json()
-                return data
-            elif res.status in [502, 503]:
-                await res.release()
-                logger.warning('wti request timed out for url:%s', url)
-                return {}
-            elif res.status == 404:
-                await res.release()
-                logger.error('unable to get data from url:%s', url)
-                return {}
-            else:
-                msg = await res.read()
-                raise WtiError('unable to connect to wti, status: %s, message:%s' % (res.status, msg))
+            data = await self._handle_response(res)
+            return data
 
     async def _update_data(self, url, data):
         logger.debug('updating wti data url:%s', url)

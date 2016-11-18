@@ -1,0 +1,140 @@
+{
+    "items": [
+        {
+            "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473.json",
+            "id": 18473,
+            "name": "Auto reply: check tutorial",
+            "placeholder": "{{dc.auto_reply_check_tutorial}}",
+            "default_locale_id": 1,
+            "outdated": false,
+            "created_at": "2012-05-09T19:37:50Z",
+            "updated_at": "2016-11-02T16:28:58Z",
+            "variants": [
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/35992.json",
+                    "id": 35992,
+                    "content": "Hallo {{ticket.requester.first_name}},\n \ndies ist eine automatische Antwort, um Ihnen mitzuteilen, dass wir Ihre Nachricht erhalten haben.\n\nIhre Ticketnummer: {{ticket.id}}\n \nBitte sehen Sie in unserer Datenbank nach, ob Ihre Fragen dort beantwortet werden: \nhttp://support.getkeepsafe.com/hc/de\n   \nAufgrund zahlreicher Supportanfragen können wir leider nicht persönlich auf Ihre Nachricht antworten. Falls Ihr Problem durch diese Informationen nicht behoben wird, antworten Sie bitte auf diese Mail und beschreiben uns das Problem genauer. Unser Supportteam wird sich dann der Sache annehmen.\n\nUnser Supportteam ist von Montag bis Freitag für Sie da.\n \nVielen Dank!\nDas Keepsafe-Team                        ",
+                    "locale_id": 8,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2012-05-09T19:48:46Z",
+                    "updated_at": "2016-06-18T01:22:04Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/36002.json",
+                    "id": 36002,
+                    "content": "Hola {{ticket.requester.first_name}}, \n  \nEsta es una respuesta automática para informarle que hemos recibido su mensaje. \n \nSu número de ticket es: {{ticket.id}} \n   \nPuede revisar nuestra Base de conocimientos aquí: http://support.getkeepsafe.com/hc/es\n   \nDebido a una alta cantidad de consultas de soporte, no podemos responder personalmente a su mensaje inicial; sin embargo, si esto no resuelve el problema, responda a este correo electrónico con una descripción más detallada y nuestro equipo de soporte le brindará más ayuda. \n\nNuestro equipo de soporte está aquí para ayudar todos los días, de lunes a viernes.\n \nGracias, \nEl equipo de Keepsafe",
+                    "locale_id": 2,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2012-05-09T19:51:39Z",
+                    "updated_at": "2016-06-18T01:22:13Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/54245.json",
+                    "id": 54245,
+                    "content": "Bonjour {{ticket.requester.first_name}}\n\nCeci est une réponse automatique qui vous confirme la réception de votre message.\n\nVotre numéro de ticket est le : {{ticket.id}}\n\nVous pouvez accéder à notre base de connaissance à l'adresse suivante :\nhttp://support.getkeepsafe.com/hc/fr\n  \nEn raison du nombre élevé de demandes, nous ne sommes pas en mesure de répondre personnellement à votre premier e-mail. Toutefois, si vous n'avez pas trouvé de solution, veuillez répondre à ce message en fournissant une description plus détaillée de votre problème pour que notre équipe de l'assistance puisse tenter de trouver une solution.  \n\nNotre équipe de l'assistance est à votre écoute tous les jours, du lundi au vendredi. \n \nMerci! \nL'équipe Keepsafe",
+                    "locale_id": 16,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2013-05-10T15:31:42Z",
+                    "updated_at": "2016-06-18T01:23:49Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/54905.json",
+                    "id": 54905,
+                    "content": "{{ticket.requester.first_name}} 様、\n\nこのメールは、ご連絡をいただいた確認として自動で配信しております。\n\nお客さまのお問い合わせ番号：{{ticket.id}}\n   \n知識ベースはこちらからご確認いただけます。\nhttp://support.getkeepsafe.com/hc/ja\n\nただいまメールでのお問合わせが大変混み合っているため、お客さまの最初のお問い合わせには自動配信にて返信しております。\n上記の方法で問題が解決されない場合は、不具合に関する詳細を記載の上、本メールにご返信ください。弊社のサポートチームが個別に対応いたします。\n\n弊社サポートチームは、月曜から金曜まで毎日対応しております。\n\nよろしくお願い申し上げます。\nKeepsafe チーム一同",
+                    "locale_id": 67,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2013-05-10T15:31:52Z",
+                    "updated_at": "2016-06-18T01:24:09Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/58998.json",
+                    "id": 58998,
+                    "content": "{{ticket.requester.first_name}}님 안녕하세요,\n \n이것은 메시지가 접수되었음을 알려드리는 자동 회신 메시지입니다.\n\n귀하의 티켓 번호: {{ticket.id}}\n \n정보 창고를 참조해 주십시오: http://support.getkeepsafe.com/hc/en-us\n \nKeepSafe에 문제가 있다면 알려진 문제 항목을 참고해 주십시오: http://support.getkeepsafe.com/hc/en-us/sections/200099945-Known-problems \n \n현재 지원 문의가 많아서 전에 보내주신 메시지에 직접 답변을 드리지 못하고 있습니다. 여전히 문제가 해결되지 않았다면 이 이메일에 회신하셔서 자세한 내용을 알려 주시면 지원팀이 답변해 드릴 것입니다.\n \n지원팀은 월요일부터 금요일까지 매일 여러분을 지원하기 위해 대기하고 있습니다.\n\n감사합니다,\nKeepSafe팀",
+                    "locale_id": 69,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2012-05-09T21:45:12Z",
+                    "updated_at": "2015-04-21T14:12:44Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/70075.json",
+                    "id": 70075,
+                    "content": "Olá {{ticket.requester.first_name}},\n\nEsta é uma resposta automática para informar que recebemos a sua mensagem.\n\nO código de rastreamento de sua mensagem é: {{ticket.id}}\n\nPor favor, verifique se suas dúvidas são respondidas em nossa página de suporte:\nhttp://support.getkeepsafe.com/hc/pt-br\n \nDevido ao alto volume de consultas de suporte, não foi possível responder pessoalmente a sua mensagem inicial; entretanto, caso  isto não resolva o seu problema, por favor, responda a este e-mail fornecendo uma descrição mais detalhada sobre o assunto e a nossa equipe de suporte irá ajudá-lo.\n \nNossa equipe de suporte está disponível todos os dias, de segunda à sexta-feira.\n\nObrigado,\nEquipe do Keepsafe",
+                    "locale_id": 19,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2013-11-19T19:09:37Z",
+                    "updated_at": "2016-06-18T01:24:31Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/75814.json",
+                    "id": 75814,
+                    "content": "{{ticket.requester.first_name}}，您好！\n\n这是一封自动回复邮件，告知您我们已经收到了您的邮件。\n\n您的问题工单号：{{ticket.id}}\n\n您可以查询我们的知识库：\nhttp://support.getkeepsafe.com/hc/zh-cn\n \n我们收到了很多会员邮件，所以我们无法人工回复您的最初邮件；不过，如果您的问题没有得到解决，请回复此邮件提供更多详细信息，我们的客服团队会尽快回复！\n \n非常感谢！\nKeepsafe 团队",
+                    "locale_id": 10,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2014-03-23T10:38:34Z",
+                    "updated_at": "2016-06-18T01:25:42Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/76200.json",
+                    "id": 76200,
+                    "content": "مرحبًا {{ticket.requester.first_name}},\n\nهذا رد أوتوماتيكي لإشعارك بأننا قد تلقينا رسالتك.\n\nرقم تذكرة الشكوى الخاصة بك هو: {{ticket.id}}\n  \nيمكننك التحقق من قاعدة المعلومات لدينا (Knowledge Base) هنا: http://support.getkeepsafe.com/hc/ar\n \nنظرًا للعدد الكبير من طلبات الدعم لدينا، فإننا غير قادرين على الرد بشكل شخصي على رسالتك الأولى، لكن، إذا  لم تستطع هذه الرسالة من حل مشكلتك، برجاء الرد على هذه الرسالة برد مفصل حتى يستطيع فريق الدعم الخاص بنا مساعدتك بشكل أفضل..\n \nفريق الدعم الخاص بنا موجود للمساعدة كل يوم، من الإثنين إلى الجمعة.\n\nشكرًا لك،\nفريق Keepsafe",
+                    "locale_id": 66,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2013-05-31T11:33:14Z",
+                    "updated_at": "2016-06-18T01:21:57Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/80870.json",
+                    "id": 80870,
+                    "content": "Здравствуйте, {{ticket.requester.first_name}},\n\nЭто письмо было отправлено автоматически, чтобы подтвердить получение вашего сообщения.\n\nНомер вашей заявки: {{ticket.id}}\n\nНайти Базу знаний вы можете здесь:\nhttp://support.getkeepsafe.com/hc/ru\n\nВ связи с большим количеством заявок, у нас нету возможности лично ответить на все сообщения. Однако если ваша проблема так и не решилась, и вы не смогли найти ответ на ваш вопрос, пожалуйста, ответьте на это письмо с детальным описанием проблемы и наша техподдержка постарается вам помочь как можно быстрее.\n\nСпасибо!\nС уважением, \nкоманда Keepsafe",
+                    "locale_id": 27,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2013-07-04T16:10:26Z",
+                    "updated_at": "2016-06-18T01:24:43Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/109904.json",
+                    "id": 109904,
+                    "content": "Merhaba {{ticket.requester.first_name}}, \n  \nBu, mesajınızı aldığımızı belirten otomatik bir cevaptır. \n \nDestek numaranız: {{ticket.id}} \n    \nBilgi Tabanımıza şuradan bakabilirsiniz: http://support.getkeepsafe.com/hc/tr\n   \nÇok miktardaki destek talebinden dolayı, önceki mesajınızı şahsen yanıtlayamadık; ancak bu işlem sorunu çözmezse, lütfen bu e-postaya daha detaylı bir tanım eşliğinde cevap verin, destek ekibimiz size yardımcı olacaktır. \n  \nDestek ekibiminiz Pazartesi - Cuma günleri arasında hizmetinizdedir. \n \nTeşekkür ederiz, \nKeepSafe Ekibi",
+                    "locale_id": 88,
+                    "outdated": false,
+                    "active": true,
+                    "default": false,
+                    "created_at": "2014-05-09T14:27:02Z",
+                    "updated_at": "2015-04-21T14:14:15Z"
+                },
+                {
+                    "url": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items/18473/variants/35333.json",
+                    "id": 35333,
+                    "content": "Hi {{ticket.requester.first_name}},\n \nThis is an automatic reply to let you know that we have received your message.\n\nYour ticket number is: {{ticket.id}}\n  \nYou can check our Knowledge Base here: http://support.getkeepsafe.com/hc/en-us\n  \nDue to a high amount of support enquiries, we are unable to personally reply to your initial message; however, if  this does not solve the issue, please reply to this email with a more detailed description and our support team will help you further..\n \nOur support team is here to help every day, Monday through Friday.\n\nThank you,\nThe KeepSafe Team",
+                    "locale_id": 1,
+                    "outdated": false,
+                    "active": true,
+                    "default": true,
+                    "created_at": "2012-05-09T19:37:50Z",
+                    "updated_at": "2015-04-17T16:57:57Z"
+                }
+            ]
+        }
+    ],
+    "next_page": "https://keepsafe.zendesk.com/api/v2/dynamic_content/items.json?page=2&per_page=10",
+    "previous_page": null,
+    "count": 125
+}
