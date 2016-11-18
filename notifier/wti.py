@@ -1,6 +1,5 @@
 import aiohttp
 import asyncio
-import json
 import logging
 
 from .model import *
@@ -12,33 +11,102 @@ USERS_URL = 'https://webtranslateit.com/api/projects/%s/users.json'
 STATUS_URL = 'https://webtranslateit.com/api/projects/%s/strings/%s/locales/%s/translations'
 PROJECT_URL = 'https://webtranslateit.com/api/projects/%s.json'
 STRINGS_URL = 'https://webtranslateit.com/api/projects/%s/strings.json'
+CREATE_STRING_URL = 'https://webtranslateit.com/api/projects/%s/strings'
 SECTION_URL = 'https://webtranslateit.com/en/projects/%s-%s/locales/%s..%s/strings/%s'
 
 
+# TODO user httpclient
 class WtiClient:
     def __init__(self, api_key):
         self._api_key = api_key
 
+    def _next_page_link(self, headers):
+        header = headers.get('Link')
+        if header:
+            for link in header.split(','):
+                bits = link.split(';')
+                if bits[1].strip() == 'rel="next"':
+                    return bits[0].strip('<>')
+        return ''
+
+    async def _handle_response(self, url, res):
+        if res.status == 200:
+            data = await res.json()
+            return data
+        elif res.status in [502, 503]:
+            await res.release()
+            logger.warning('wti request timed out for url:%s', url)
+            return {}
+        elif res.status == 404:
+            await res.release()
+            logger.error('unable to get data from url:%s', url)
+            return {}
+        else:
+            msg = await res.read()
+            raise WtiError('unable to connect to wti, status: %s, message:%s' % (res.status, msg))
+
     async def _request_data(self, url):
+        logger.debug('getting wti data url:%s', url)
         with aiohttp.ClientSession() as session:
             res = await session.get(url)
-            if res.status == 200:
-                data = await res.json()
-                return data
-            else:
-                msg = await res.read()
-                raise WtiConnectionError('unable to contact wti, status: %s, message:%s' % (res.status, msg))
+            data = await self._handle_response(url, res)
+            return data
+
+    async def _request_paging_data(self, url):
+        logger.debug('getting wti data url:%s', url)
+        result = []
+        with aiohttp.ClientSession() as session:
+            for i in range(10):
+                res = await session.get(url)
+                data = await self._handle_response(url, res)
+                result.extend(data)
+                url = self._next_page_link(res.headers)
+                if not url:
+                    break
+        return result
+
+    async def _update_data(self, url, data):
+        logger.debug('updating wti data url:%s', url)
+        try:
+            headers = {'content-type': 'application/json'}
+            with aiohttp.ClientSession() as session:
+                res = await asyncio.wait_for(session.post(url, data=data, headers=headers), 5)
+                await res.release()
+                if res.status in [200, 201, 202]:
+                    return True
+                else:
+                    logger.error('request to wti failed status:%s', res.status)
+        except asyncio.TimeoutError:
+            logging.error('Request to %s took more then 5s to finish, dropping', url)
+        return False
 
     async def string(self, string_id, locale):
-        url = TRANSLATION_URL % (self._api_key, locale, string_id)
+        url = TRANSLATION_URL % (self._api_key, string_id, locale)
         data = await self._request_data(url)
-        return WtiString(data['id'], data['text'], data['locale'])
+        if data:
+            return WtiString(data['id'], data['locale'], data['text'])
+        else:
+            return {}
 
-    async def strings(self):
-        raise NotImplementedError()
+    async def create_string(self, dc_item, default_locale):
+        url = CREATE_STRING_URL % self._api_key
+        data = {
+            'key': dc_item.key,
+            'plural': False,
+            'type': 'String',
+            'dev_comment': dc_item.zendesk_item.name,
+            'translations': [{
+                'locale': default_locale,
+                'text': dc_item.zendesk_item.text,
+                'status': WtiTranslationStatus.proofread.value
+            }]
+        }
+        await self._update_data(url, data)
+
+    async def strings_ids(self):
         url = STRINGS_URL % self._api_key
-        data = await self._request_data(url)
-        return [WtiString(s['id'], s['text'], s['locale']) for s in data]
+        data = await self._request_paging_data(url)
+        return {item['key']: item['id'] for item in data}
 
     async def user(self, user_id):
         url = USERS_URL % self._api_key
@@ -50,20 +118,10 @@ class WtiClient:
         return WtiUser(0, None, None)
 
     async def change_status(self, translated_string, status=WtiTranslationStatus.unverified):
-        message = json.dumps({'text': translated_string.text, 'status': status.value, 'minor_change': False})
-        headers = {'content-type': 'application/json'}
+        data = {'text': translated_string.text, 'status': status.value, 'minor_change': False}
         url = STATUS_URL % (self._api_key, translated_string.locale, translated_string.id)
-        try:
-            with aiohttp.ClientSession() as session:
-                res = await asyncio.wait_for(session.post(url, data=message, headers=headers), 5)
-                await res.release()
-                if res.status in [200, 202]:
-                    return True
-                else:
-                    logger.error('request to wti failed status:%s', res.status)
-        except asyncio.TimeoutError:
-            logging.error('Request to {} took more then 5s to finish, dropping'.format(url))
-        return False
+        res = await self._update_data(url, data)
+        return res
 
     def _filename(self, files, file_id):
         for file in files:
@@ -85,3 +143,12 @@ class WtiClient:
     def section_link(self, project, translated_string):
         return SECTION_URL % (project.id, project.name, project.master_locale, translated_string.locale,
                               translated_string.id)
+
+    async def update_translation(self, dc_item, locale):
+        url = TRANSLATION_URL % (self._api_key, dc_item.wti_id, locale)
+        data = {
+            'text': dc_item.zendesk_item.text,
+            'status': WtiTranslationStatus.proofread.value,
+            'minor_change': False
+        }
+        await self._update_data(url, data)

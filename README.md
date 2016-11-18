@@ -7,7 +7,7 @@ Real time content validation for [WebTranslateIt](https://webtranslateit.com)
 
 ## Requirements
 
-* Python 3.4.+
+* Python 3.5.+
 
 ## Installation
 

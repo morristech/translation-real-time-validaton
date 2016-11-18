@@ -3,8 +3,10 @@ from collections import namedtuple
 
 WtiUser = namedtuple('WtiUser', ['id', 'email', 'role'])
 WtiProject = namedtuple('WtiProject', ['id', 'name', 'master_locale', 'filename', 'content_type'])
-WtiString = namedtuple('WtiString', ['id', 'text', 'locale'])
-WtiTranslation = namedtuple('WtiTranslation', ['id', 'locale', 'text'])
+WtiString = namedtuple('WtiString', ['id', 'locale', 'text'])
+
+ZendeskItem = namedtuple('ZendeskItem', ['id', 'name', 'text', 'variants'])
+DynamicContentItem = namedtuple('DynamicContentItem', ['key', 'wti_id', 'zendesk_item'])
 
 DiffError = namedtuple('DiffError', ['url_errors', 'md_error', 'section_link'])
 
@@ -17,6 +19,7 @@ class WtiUserRoles(Enum):
 
 class WtiTranslationStatus(Enum):
     unverified = 'status_unverified'
+    unproofread = 'status_unproofread'
     proofread = 'status_proofread'
 
 
@@ -26,5 +29,9 @@ class WtiContentTypes(Enum):
     java = 'java'
 
 
-class WtiConnectionError(Exception):
+class WtiError(Exception):
+    pass
+
+
+class ZendeskError(Exception):
     pass

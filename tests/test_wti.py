@@ -10,15 +10,24 @@ class TestTranslate(AsyncTestCase):
         self.client = wti.WtiClient('dummy_key')
 
     def test_connection_error(self):
-        self.mock_session_get.return_value = self.make_res(status=404)
-        with self.assertRaises(WtiConnectionError):
+        self.mock_session_get.return_value = self.make_res(status=500)
+        with self.assertRaises(WtiError):
             self.coro(self.client.string('dummy_id', 'dummy_locale'))
 
     def test_string(self):
-        expected = WtiString(22683983, '#bbb\n\nbbb', 'pl')
-        body = read_fixture('translation_pl.json')
-        self.mock_session_get.return_value = self.make_res(body=body)
+        expected = WtiString(22683983, 'pl', '#bbb\n\nbbb')
+        self.mock_session_get.return_value = self.make_res(body=read_fixture('translation_pl.json'))
         actual = self.coro(self.client.string('dummy_id', 'dummy_locale'))
+        self.assertEqual(expected, actual)
+
+    def test_strings_ids(self):
+        expected = {
+            'dc.makro_start_message': 3879010,
+            'dc.makro_password-how_to_reset_password': 3879008,
+            'dc.makro_password-uninstall_reinstall': 3879009
+        }
+        self.mock_session_get.return_value = self.make_res(body=read_fixture('strings.json'))
+        actual = self.coro(self.client.strings_ids())
         self.assertEqual(expected, actual)
 
     def test_user(self):
@@ -41,3 +50,24 @@ class TestTranslate(AsyncTestCase):
         self.mock_session_get.return_value = self.make_res(body=body)
         actual = self.coro(self.client.project(395411, WtiContentTypes.md))
         self.assertEqual(expected, actual)
+
+    def test_strings_ids_paging(self):
+        expected = {
+            'dc.makro_start_message': 3879010,
+            'dc.makro_password-how_to_reset_password': 3879008,
+            'dc.makro_password-uninstall_reinstall': 3879009,
+            'dc.makro_password-blahblah': 3879018
+        }
+        headers = {
+            'Link': '<https://webtranslateit.com/api/projects/xxx/strings.json?page=2>; rel="next"'
+            ', <https://webtranslateit.com/api/projects/xxx/strings.json?page=4>; rel="last", '
+            '<https://webtranslateit.com/api/projects/xxx/strings.json?page=1>; rel="first"'
+        }
+        self.mock_session_get.side_effect = iter([
+            self.make_res(
+                body=read_fixture('strings.json'), headers=headers),
+            self.make_res(body=read_fixture('strings_page.json'))
+        ])
+        actual = self.coro(self.client.strings_ids())
+        self.assertEqual(expected, actual)
+        self.mock_session_get.assert_called_with('https://webtranslateit.com/api/projects/xxx/strings.json?page=2')

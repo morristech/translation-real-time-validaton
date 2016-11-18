@@ -2,7 +2,7 @@ import logging
 import asyncio
 from aiohttp import web
 
-from . import const, mailer, routes
+from . import const, mailer, wti, zendesk, routes
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +13,11 @@ def app(global_config, **settings):
     loop.set_debug(False)
 
     app = web.Application(logger=logger, loop=loop)
-    app[const.SETTINGS] = settings
+    app[const.APP_SETTINGS] = settings
     app[const.EMAIL_PROVIDER] = mailer.SendgridProvider(settings)
+    app[const.WTI_DYNAMIC_CONTENT] = wti.WtiClient(settings['wti.api_key'])
+    app[const.ZENDESK_DC] = zendesk.ZendeskDynamicContent(settings)
+
     routes.init(app.router)
 
     return app
