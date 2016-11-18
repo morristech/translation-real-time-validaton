@@ -3,7 +3,7 @@ import json
 import asyncio
 from aiohttp import web
 
-from . import const, wti, validator
+from . import const, wti, validator, sync
 from .model import *
 
 logger = logging.getLogger(__name__)
@@ -72,8 +72,14 @@ async def project(req):
     return web.Response()
 
 
+async def zendesk_sync(req):
+    asyncio.ensure_future(sync.sync_zendesk(req.app))
+    return web.Response()
+
+
 def init(router):
     logger.info('Initializing public api endpoints')
 
     router.add_route('GET', '/healthcheck', healthcheck)
     router.add_route('POST', '/translations', new_translation)
+    router.add_route('POST', '/zendesk/sync', zendesk_sync)
