@@ -37,7 +37,6 @@ class ZendeskDynamicContent:
             raise ZendeskError('unable to get data from zendesk path:%s, status:%s' % (path, res.status))
 
     async def _put_data(self, path, data):
-        return
         res = await self._client.put(path, data)
         if res.status not in [200, 201]:
             msg = await res.read()
@@ -90,6 +89,7 @@ class ZendeskDynamicContent:
                 translation_id = dc_item.zendesk_item.variants[locale_id]
                 variants.append({'id': translation_id, 'active': True, 'default': False, 'content': translation.text})
             else:
-                logger.warning('missing variant for locale id:%s name:%s', locale_id, translation.locale)
+                logger.warning('missing variant key:%s for locale id:%s name:%s', dc_item.key, locale_id,
+                               translation.locale)
         path = self.MANY_VARIANTS_PATH % dc_item.zendesk_item.id
         await self._put_data(path, {'variants': variants})

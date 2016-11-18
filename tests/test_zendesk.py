@@ -53,7 +53,7 @@ class TestZendesk(AsyncTestCase):
         self.assertEqual(expected, item.variants)
 
     def test_update(self):
-        dc_item = DynamicContentItem('dummy_key', 'wti_id', ZendeskItem('zendesk_id', 'text', {16: 'en'}))
+        dc_item = DynamicContentItem('dummy_key', 'wti_id', ZendeskItem('zendesk_id', 'name', 'text', {16: 'en'}))
         translations = [WtiString('id', 'fr', 'text')]
         self.coro(self.client.update(dc_item, translations, self.locales))
         self.mock_session().request.assert_called_with(

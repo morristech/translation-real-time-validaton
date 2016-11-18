@@ -50,3 +50,24 @@ class TestTranslate(AsyncTestCase):
         self.mock_session_get.return_value = self.make_res(body=body)
         actual = self.coro(self.client.project(395411, WtiContentTypes.md))
         self.assertEqual(expected, actual)
+
+    def test_strings_ids_paging(self):
+        expected = {
+            'dc.makro_start_message': 3879010,
+            'dc.makro_password-how_to_reset_password': 3879008,
+            'dc.makro_password-uninstall_reinstall': 3879009,
+            'dc.makro_password-blahblah': 3879018
+        }
+        headers = {
+            'Link': '<https://webtranslateit.com/api/projects/xxx/strings.json?page=2>; rel="next"'
+            ', <https://webtranslateit.com/api/projects/xxx/strings.json?page=4>; rel="last", '
+            '<https://webtranslateit.com/api/projects/xxx/strings.json?page=1>; rel="first"'
+        }
+        self.mock_session_get.side_effect = iter([
+            self.make_res(
+                body=read_fixture('strings.json'), headers=headers),
+            self.make_res(body=read_fixture('strings_page.json'))
+        ])
+        actual = self.coro(self.client.strings_ids())
+        self.assertEqual(expected, actual)
+        self.mock_session_get.assert_called_with('https://webtranslateit.com/api/projects/xxx/strings.json?page=2')
