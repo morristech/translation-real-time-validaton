@@ -36,6 +36,16 @@ class ZendeskDynamicContent:
             await res.release()
             raise ZendeskError('unable to get data from zendesk path:%s, status:%s' % (path, res.status))
 
+    async def _put_data(self, path, data):
+        return
+        res = await self._client.put(path, data)
+        if res.status not in [200, 201]:
+            msg = await res.read()
+            logger.error('unable to update zendesk content status: %s, message: %s', status, msg)
+            return False
+        await res.release()
+        return True
+
     async def locales(self):
         data = await self._get_data(self.LOCALES_PATH)
         return {locale['locale']: locale['id'] for locale in data['locales']}
@@ -55,7 +65,7 @@ class ZendeskDynamicContent:
                 variants[locale_id] = variant_item['id']
         if not text:
             logger.error('no variant for locale %s and item %s', locale_id, item['id'])
-        return ZendeskItem(item['id'], text, variants)
+        return ZendeskItem(item['id'], item['name'], text, variants)
 
     async def items(self, zendesk_locales):
         next_page = self.ITEMS_PATH
@@ -82,8 +92,4 @@ class ZendeskDynamicContent:
             else:
                 logger.warning('missing variant for locale id:%s name:%s', locale_id, translation.locale)
         path = self.MANY_VARIANTS_PATH % dc_item.zendesk_item.id
-        res = await self._client.put(path, {'variants': variants})
-        if res.status not in [200, 201]:
-            msg = await res.read()
-            logger.error('unable to update zendesk content status: %s, message: %s', status, msg)
-        await res.release()
+        await self._put_data(path, {'variants': variants})

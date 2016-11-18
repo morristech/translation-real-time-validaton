@@ -28,7 +28,8 @@ async def _update_item(zendesk_dc, wti_client, zendesk_locales, dc_item):
 
 
 async def _create_item(zendesk_dc, wti_client, zendesk_locales, dc_item):
-    pass
+    logger.info('creating new item in wti key:%s', dc_item.key)
+    await wti_client.create_string(dc_item, zendesk_dc.default_locale)
 
 
 async def sync_zendesk(app):
@@ -36,6 +37,10 @@ async def sync_zendesk(app):
     wti_client = app[const.WTI_DYNAMIC_CONTENT]
 
     wti_items = await wti_client.strings_ids()
+    if not wti_items:
+        logger.error('no wti strings found')
+        return
+    logger.info('got %s trings', len(wti_items))
     zendesk_locales = await zendesk_dc.locales()
     zendesk_items = await zendesk_dc.items(zendesk_locales)
     dc_items = _to_dc_items(wti_items, zendesk_items)

@@ -11,6 +11,7 @@ USERS_URL = 'https://webtranslateit.com/api/projects/%s/users.json'
 STATUS_URL = 'https://webtranslateit.com/api/projects/%s/strings/%s/locales/%s/translations'
 PROJECT_URL = 'https://webtranslateit.com/api/projects/%s.json'
 STRINGS_URL = 'https://webtranslateit.com/api/projects/%s/strings.json'
+CREATE_STRING_URL = 'https://webtranslateit.com/api/projects/%s/strings'
 SECTION_URL = 'https://webtranslateit.com/en/projects/%s-%s/locales/%s..%s/strings/%s'
 
 
@@ -19,32 +20,29 @@ class WtiClient:
     def __init__(self, api_key):
         self._api_key = api_key
 
-    async def _handle_response(self, res):
-        if res.status == 200:
-            data = await res.json()
-            return data
-        elif res.status in [502, 503]:
-            await res.release()
-            logger.warning('wti request timed out for url:%s', url)
-            return {}
-        elif res.status == 404:
-            await res.release()
-            logger.error('unable to get data from url:%s', url)
-            return {}
-        else:
-            msg = await res.read()
-            raise WtiError('unable to connect to wti, status: %s, message:%s' % (res.status, msg))
-
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)
         # TODO handle pagination
         with aiohttp.ClientSession() as session:
             res = await session.get(url)
-            data = await self._handle_response(res)
-            return data
+            if res.status == 200:
+                data = await res.json()
+                return data
+            elif res.status in [502, 503]:
+                await res.release()
+                logger.warning('wti request timed out for url:%s', url)
+                return {}
+            elif res.status == 404:
+                await res.release()
+                logger.error('unable to get data from url:%s', url)
+                return {}
+            else:
+                msg = await res.read()
+                raise WtiError('unable to connect to wti, status: %s, message:%s' % (res.status, msg))
 
     async def _update_data(self, url, data):
         logger.debug('updating wti data url:%s', url)
+        return True
         try:
             headers = {'content-type': 'application/json'}
             with aiohttp.ClientSession() as session:
@@ -66,11 +64,20 @@ class WtiClient:
         else:
             return {}
 
-    async def create_string(self, string_id, locale, text):
-        url = TRANSLATION_URL % (self._api_key, locale, string_id)
-        data = {'text': text, 'status': WtiTranslationStatus.unproofread, 'minor_change': True}
-        res = await self._update_data(url, data)
-        return res
+    async def create_string(self, dc_item, default_locale):
+        url = CREATE_STRING_URL % self._api_key
+        data = {
+            'key': dc_item.key,
+            'plural': False,
+            'type': 'String',
+            'dev_comment': dc_item.zendesk_item.name,
+            'translations': [{
+                'locale': default_locale,
+                'text': dc_item.zendesk_item.text,
+                'status': WtiTranslationStatus.proofread.value
+            }]
+        }
+        await self._update_data(url, data)
 
     async def strings_ids(self):
         url = STRINGS_URL % self._api_key
