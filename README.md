@@ -1,4 +1,4 @@
-# translation-real-time-validaton
+# translation-real-time-validaton [![Build Status](https://travis-ci.org/KeepSafe/translation-real-time-validaton.svg?branch=master)](https://travis-ci.org/KeepSafe/translation-real-time-validaton)
 ===================================
 
 Real time content validation for [WebTranslateIt](https://webtranslateit.com)
