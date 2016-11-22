@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import logging
+import json
 
 from .model import *
 
@@ -70,12 +71,13 @@ class WtiClient:
         try:
             headers = {'content-type': 'application/json'}
             with aiohttp.ClientSession() as session:
-                res = await asyncio.wait_for(session.post(url, data=data, headers=headers), 5)
-                await res.release()
+                res = await asyncio.wait_for(session.post(url, data=json.dumps(data), headers=headers), 5)
                 if res.status in [200, 201, 202]:
+                    await res.release()
                     return True
                 else:
-                    logger.error('request to wti failed status:%s', res.status)
+                    msg = await res.text()
+                    logger.error('request to wti failed status:%s, message: %s', res.status, msg)
         except asyncio.TimeoutError:
             logging.error('Request to %s took more then 5s to finish, dropping', url)
         return False

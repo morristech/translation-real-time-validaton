@@ -1,7 +1,9 @@
 import validator
 import validator.checks
 import os
+import hashlib
 
+from . import const
 from .model import *
 
 
@@ -30,3 +32,15 @@ def _md_diff(base, other):
 
 def _java_diff(base, other):
     return validator.parse().text(base, other).check().java().validate()
+
+
+def is_different(text1, text2):
+    hash1 = hashlib.md5()
+    hash1.update(text1.encode(const.ENCODING))
+    hash1 = hash1.hexdigest()
+
+    hash2 = hashlib.md5()
+    hash2.update(text2.encode(const.ENCODING))
+    hash2 = hash2.hexdigest()
+
+    return hash1 == hash2

@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from . import const
+from . import const, compare
 from .model import *
 
 logger = logging.getLogger(__name__)
@@ -19,16 +19,27 @@ async def _get_all_translations(zendesk_dc, wti_client, dc_item, zendesk_locales
     return [d for d in data if d]
 
 
+def _default_translation(translations, default_locale):
+    for translation in translations:
+        if translation.locale == default_locale:
+            return translation.text
+    return ''
+
+
 async def _update_item(zendesk_dc, wti_client, zendesk_locales, dc_item):
-    await wti_client.update_translation(dc_item, zendesk_dc.default_locale)
     translations = await _get_all_translations(zendesk_dc, wti_client, dc_item, zendesk_locales)
+    if compare.is_different(_default_translation(translations, zendesk_dc.default_locale), dc_item.zendesk_item.text):
+        logger.info('updating wti item with key:%s', dc_item.key)
+        await wti_client.update_translation(dc_item, zendesk_dc.default_locale, translations)
+    else:
+        logger.info('item with key %s did not change', dc_item.key)
     logger.info('updating dynamic content key:%s for locales:%s', dc_item.key,
                 list(map(lambda i: i.locale, translations)))
     await zendesk_dc.update(dc_item, translations, zendesk_locales)
 
 
 async def _create_item(zendesk_dc, wti_client, zendesk_locales, dc_item):
-    logger.info('creating new item in wti key:%s', dc_item.key)
+    logger.info('creating new wti item with key:%s', dc_item.key)
     await wti_client.create_string(dc_item, zendesk_dc.default_locale)
 
 
@@ -40,7 +51,6 @@ async def sync_zendesk(app):
     if not wti_items:
         logger.error('no wti strings found')
         return
-    logger.info('got %s trings', len(wti_items))
     zendesk_locales = await zendesk_dc.locales()
     zendesk_items = await zendesk_dc.items(zendesk_locales)
     dc_items = _to_dc_items(wti_items, zendesk_items)
