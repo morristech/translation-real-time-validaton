@@ -38,7 +38,7 @@ class ZendeskDynamicContent:
             raise ZendeskError('unable to get data from zendesk path:%s, status:%s' % (path, res.status))
 
     async def _put_data(self, path, data):
-        res = await self._client.put(path, data=json.dumps(data))
+        res = await self._client.put(path, data=json.dumps(data, sort_keys=True))
         if res.status not in [200, 201]:
             msg = await res.read()
             logger.error('unable to update zendesk content status: %s, message: %s', res.status, msg)

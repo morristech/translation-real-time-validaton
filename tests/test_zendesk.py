@@ -59,4 +59,4 @@ class TestZendesk(AsyncTestCase):
         self.mock_session().request.assert_called_with(
             'PUT',
             'https://keepsafe.zendesk.com/api/v2/dynamic_content/items/zendesk_id/variants/update_many.json',
-            data='{"variants": [{"default": false, "id": "en", "active": true, "content": "text"}]}')
+            data='{"variants": [{"active": true, "content": "text", "default": false, "id": "en"}]}')
