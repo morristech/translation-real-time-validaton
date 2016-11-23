@@ -54,6 +54,7 @@ async def sync_zendesk(app):
     zendesk_locales = await zendesk_dc.locales()
     zendesk_items = await zendesk_dc.items(zendesk_locales)
     dc_items = _to_dc_items(wti_items, zendesk_items)
+    logger.info('get %s items to process', len(dc_items))
     for dc_item in dc_items:
         if dc_item.wti_id:
             await _update_item(zendesk_dc, wti_client, zendesk_locales, dc_item)
