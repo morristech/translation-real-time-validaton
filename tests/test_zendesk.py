@@ -57,10 +57,6 @@ class TestZendesk(AsyncTestCase):
         translations = [WtiString('id', 'fr', 'text')]
         self.coro(self.client.update(dc_item, translations, self.locales))
         self.mock_session().request.assert_called_with(
-            'PUT', 'https://keepsafe.zendesk.com/api/v2/dynamic_content/items/zendesk_id/variants/update_many.json',
-            {'variants': [{
-                'content': 'text',
-                'default': False,
-                'id': 'en',
-                'active': True
-            }]})
+            'PUT',
+            'https://keepsafe.zendesk.com/api/v2/dynamic_content/items/zendesk_id/variants/update_many.json',
+            data='{"variants": [{"default": false, "id": "en", "active": true, "content": "text"}]}')
