@@ -12,7 +12,8 @@ class ZendeskDynamicContent:
     HOST = 'https://keepsafe.zendesk.com/api/v2/'
     LOCALES_PATH = 'locales.json'
     ITEMS_PATH = 'dynamic_content/items.json'
-    MANY_VARIANTS_PATH = 'dynamic_content/items/%s/variants/update_many.json'
+    UPDATE_MANY_PATH = 'dynamic_content/items/%s/variants/update_many.json'
+    CREATE_MANY_PATH = 'dynamic_content/items/%s/variants/create_many.json'
 
     def __init__(self, settings):
         self._settings = settings
@@ -37,8 +38,8 @@ class ZendeskDynamicContent:
             await res.release()
             raise ZendeskError('unable to get data from zendesk path:%s, status:%s' % (path, res.status))
 
-    async def _put_data(self, path, data):
-        res = await self._client.put(path, data=json.dumps(data, sort_keys=True))
+    async def _put_data(self, path, data, method='PUT'):
+        res = await self._client.request(method, path, data=json.dumps(data, sort_keys=True))
         if res.status not in [200, 201]:
             msg = await res.read()
             logger.error('unable to update zendesk content status: %s, message: %s', res.status, msg)
@@ -83,14 +84,19 @@ class ZendeskDynamicContent:
         return result
 
     async def update(self, dc_item, translations, zendesk_locales):
-        variants = []
+        update_variants = []
+        create_variants = []
         for translation in translations:
             locale_id = zendesk_locales[translation.locale]
+            variant = {'locale_id': locale_id, 'active': True, 'default': False, 'content': translation.text}
             if locale_id in dc_item.zendesk_item.variants:
-                translation_id = dc_item.zendesk_item.variants[locale_id]
-                variants.append({'id': translation_id, 'active': True, 'default': False, 'content': translation.text})
+                variant['id'] = dc_item.zendesk_item.variants[locale_id]
+                update_variants.append(variant)
             else:
-                logger.warning('missing variant key:%s for locale id:%s name:%s', dc_item.key, locale_id,
-                               translation.locale)
-        path = self.MANY_VARIANTS_PATH % dc_item.zendesk_item.id
-        await self._put_data(path, {'variants': variants})
+                create_variants.append(variant)
+        if update_variants:
+            path = self.UPDATE_MANY_PATH % dc_item.zendesk_item.id
+            await self._put_data(path, {'variants': update_variants})
+        if create_variants:
+            path = self.CREATE_MANY_PATH % dc_item.zendesk_item.id
+            await self._put_data(path, {'variants': create_variants}, 'POST')
