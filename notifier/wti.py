@@ -40,7 +40,7 @@ class WtiClient:
             return {}
         elif res.status == 404:
             await res.release()
-            logger.error('unable to get data from url:%s', url)
+            logger.debug('data does not exist for url:%s', url)
             return {}
         else:
             msg = await res.read()

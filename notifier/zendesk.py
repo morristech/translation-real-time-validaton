@@ -36,7 +36,8 @@ class ZendeskDynamicContent:
             return data
         else:
             await res.release()
-            raise ZendeskError('unable to get data from zendesk path:%s, status:%s' % (path, res.status))
+            logger.error('unable to get data from zendesk path:%s, status:%s', path, res.status)
+            return {}
 
     async def _put_data(self, path, data, method='PUT'):
         res = await self._client.request(method, path, data=json.dumps(data, sort_keys=True))

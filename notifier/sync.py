@@ -34,7 +34,7 @@ async def _update_item(zendesk_dc, wti_client, zendesk_locales, dc_item):
         await wti_client.update_translation(dc_item, zendesk_dc.default_locale, translations)
         res = True
     else:
-        logger.info('item with key %s did not change', dc_item.key)
+        logger.debug('item with key %s did not change', dc_item.key)
     logger.info('updating dynamic content key:%s for locales:%s', dc_item.key,
                 list(map(lambda i: i.locale, translations)))
     await zendesk_dc.update(dc_item, translations, zendesk_locales)
@@ -64,3 +64,4 @@ async def sync_zendesk(app):
             await _update_item(zendesk_dc, wti_client, zendesk_locales, dc_item)
         else:
             await _create_item(zendesk_dc, wti_client, zendesk_locales, dc_item)
+    logger.info('done updating content')

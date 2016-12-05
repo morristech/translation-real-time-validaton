@@ -31,7 +31,3 @@ class WtiContentTypes(Enum):
 
 class WtiError(Exception):
     pass
-
-
-class ZendeskError(Exception):
-    pass
