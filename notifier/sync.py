@@ -60,6 +60,7 @@ async def sync_zendesk(app):
     zendesk_items = await zendesk_dc.items(zendesk_locales)
     dc_items = _to_dc_items(wti_items, zendesk_items)
     logger.info('get %s items to process', len(dc_items))
+    stats.increment('sync.items', len(updated_keys))
     updated_keys = []
     for dc_item in dc_items:
         if dc_item.wti_id:
@@ -71,5 +72,5 @@ async def sync_zendesk(app):
             updated_keys.append(dc_item.key)
     if updated_keys:
         await app[const.SLACK_NOTIFIER].notify(updated_keys)
-        stats.increment('sync_items', len(updated_keys))
+        stats.increment('sync.items', len(updated_keys))
     logger.info('done updating content')
