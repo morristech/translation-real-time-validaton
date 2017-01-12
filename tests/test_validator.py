@@ -10,6 +10,7 @@ class TestValidator(AsyncTestCase):
     def test_check_translations(self):
         app = self.make_app()
         app[const.EMAIL_PROVIDER] = provider = MagicMock()
+        app[const.STATS] = MagicMock()
         provider.send.return_value = self.make_fut()
 
         payload = [read_fixture('payload.json', decoder=json.loads)]

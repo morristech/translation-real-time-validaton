@@ -2,7 +2,7 @@ import logging
 import asyncio
 from aiohttp import web
 
-from . import const, mailer, wti, zendesk, routes, notifier
+from . import const, mailer, wti, zendesk, routes, notifier, stats
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ def app(global_config, **settings):
     app[const.WTI_DYNAMIC_CONTENT] = wti.WtiClient(settings['wti.api_key'])
     app[const.ZENDESK_DC] = zendesk.ZendeskDynamicContent(settings)
     app[const.SLACK_NOTIFIER] = notifier.SlackNotifier(settings)
+    app[const.STATS] = stats.Stats(settings['datadog_api_key'])
 
     routes.init(app.router)
 

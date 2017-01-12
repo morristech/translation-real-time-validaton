@@ -1,6 +1,6 @@
 import logging
 
-from . import compare, mailer
+from . import compare, mailer, const
 from .model import *
 
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ async def _check_translation(app, wti_client, content_type, translation):
     if diff:
         user = await wti_client.user(translation['user_id'])
         await mailer.send(app, user.email, diff)
+        app[const.STATS].increment('validation.failed')
         if user.role != WtiUserRoles.manager:
             await wti.change_status(translated_string)
 

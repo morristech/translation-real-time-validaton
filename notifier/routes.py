@@ -51,6 +51,8 @@ async def new_translation(req):
     wti_client = wti.WtiClient(wti_key)
     asyncio.ensure_future(validator.check_translations(req.app, wti_client, content_type, payload))
 
+    req.app[const.STATS].increment('validation.count')
+
     return web.Response()
 
 

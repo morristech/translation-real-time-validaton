@@ -50,6 +50,7 @@ async def _create_item(zendesk_dc, wti_client, zendesk_locales, dc_item):
 async def sync_zendesk(app):
     zendesk_dc = app[const.ZENDESK_DC]
     wti_client = app[const.WTI_DYNAMIC_CONTENT]
+    stats = app[const.STATS]
 
     wti_items = await wti_client.strings_ids()
     if not wti_items:
@@ -70,4 +71,5 @@ async def sync_zendesk(app):
             updated_keys.append(dc_item.key)
     if updated_keys:
         await app[const.SLACK_NOTIFIER].notify(updated_keys)
+        stats.increment('sync_items', len(updated_keys))
     logger.info('done updating content')
