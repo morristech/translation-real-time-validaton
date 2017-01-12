@@ -60,7 +60,7 @@ async def sync_zendesk(app):
     zendesk_items = await zendesk_dc.items(zendesk_locales)
     dc_items = _to_dc_items(wti_items, zendesk_items)
     logger.info('get %s items to process', len(dc_items))
-    stats.increment('sync.items', len(updated_keys))
+    stats.increment('sync.tick')
     updated_keys = []
     for dc_item in dc_items:
         if dc_item.wti_id:
