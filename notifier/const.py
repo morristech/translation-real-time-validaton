@@ -1,4 +1,5 @@
 ENCODING = 'utf-8'
+REQ_APP_KEY = 'wti_apikey'
 EMAIL_PROVIDER = 'srv.email_provider'
 WTI_DYNAMIC_CONTENT = 'srv.wti_dynamic_content'
 ZENDESK_DC = 'srv.zendesk_dynamic_content'
