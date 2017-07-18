@@ -1,11 +1,11 @@
-aiohttp==0.20.2
+aiohttp==0.21.2
 gunicorn==19.3.0
 -e git://github.com/KeepSafe/html-structure-diff.git@#egg=sdiff
 -e git://github.com/KeepSafe/content-validator.git#egg=content_validator
 docopt==0.4.0
 hoep==1.0.2
 parse==1.6.6
-requests==2.5.1
+requests==2.13.0
 inlinestyler==0.2.0
 PasteDeploy==1.5.2
 simplejson==3.8.2
