@@ -22,6 +22,7 @@ async def _check_translation(app, wti_client, content_type, translation):
     translated_string = WtiString(translation['string_id'], translation['locale'], translation['translation']['text'])
     diff = await app.loop.run_in_executor(None, compare.diff, wti_client, project, base_string, translated_string)
     if diff:
+        logger.info('errors found in string %s, project %s', translation['string_id'], translation['project_id'])
         user = await wti_client.user(translation['user_id'])
         await mailer.send(app, user.email, diff)
         app[const.STATS].increment('validation.failed')
