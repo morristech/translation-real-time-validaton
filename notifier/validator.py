@@ -8,6 +8,7 @@ UPDATE_PATH = 'admin/refresh_wti'
 
 
 async def check_translations(app, wti_client, content_type, payload):
+    logger.info('translating %s segments', len(payload))
     for data in payload:
         if data['translation'].get('status') != WtiTranslationStatus.proofread.value:
             continue
@@ -25,7 +26,9 @@ async def _check_translation(app, wti_client, content_type, translation):
         await mailer.send(app, user.email, diff)
         app[const.STATS].increment('validation.failed')
         if user.role != WtiUserRoles.manager:
-            await wti.change_status(translated_string)
+            await wti_client.change_status(translated_string)
+    else:
+        app[const.STATS].increment('validation.success')
 
 
 async def validate_project(wti_key, mail_client, user_email):

@@ -54,10 +54,20 @@ docs/_build/
 # PyBuilder
 target/
 
+# Intellij files
+.idea/
+*.iml
+
+# Sublime files
+*.sublime-project
+*.sublime-workspace
+
+# VSCode
+.vscode
+
 .DS_Store
 srv.ini
 *.log
-.vscode
 
 node_modules/
 doc/

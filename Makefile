@@ -13,10 +13,12 @@ FLAGS=
 
 env:
 	python3 -m venv venv
+	${PIP} install -r requirements-dev.txt
 	$(PYTHON) ./setup.py develop
 
 dev:
-	$(PIP) install flake8 nose coverage requests
+	$(PIP) install coverage requests
+	${PIP} install -r requirements-dev.txt
 	$(PYTHON) ./setup.py develop
 	npm install apidoc
 
