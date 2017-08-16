@@ -1,6 +1,6 @@
-import logging
-import json
 import asyncio
+import logging
+
 from aiohttp import web
 
 from . import const, wti, validator, sync
@@ -42,7 +42,7 @@ async def new_translation(req):
     wti_key = req.GET.get(const.REQ_APP_KEY)
     if not wti_key:
         project_name = req.GET.get(const.REQ_PROJECT)
-        projects = _list_projects(req[const.APP_SETTINGS])
+        projects = _list_projects(req.app[const.APP_SETTINGS])
         wti_key = projects.get(project_name)
         if not wti_key:
             msg = 'no wti_key or valid project in request query params'
