@@ -24,7 +24,7 @@ def _list_projects(settings):
     for project in projects:
         bits = project.split(':')
         if len(bits) > 1:
-            result[bits[0]] = bits[1]
+            result[bits[0].strip()] = bits[1].strip()
     return result
 
 
