@@ -17,6 +17,17 @@ async def healthcheck(req):
     return web.Response()
 
 
+def _list_projects(settings):
+    projects = settings.get('projects', '')
+    result = {}
+    projects = projects.split('\n')
+    for project in projects:
+        bits = project.split(':')
+        if len(bits) > 1:
+            result[bits[0]] = bits[1]
+    return result
+
+
 async def new_translation(req):
     """
     @api {POST} /translations/?wti_apikey={}&type={} Validate translation
@@ -30,9 +41,13 @@ async def new_translation(req):
     """
     wti_key = req.GET.get(const.REQ_APP_KEY)
     if not wti_key:
-        msg = 'wti_key not in request query params'
-        logger.error(msg)
-        return web.HTTPBadRequest(reason=msg)
+        project_name = req.GET.get(const.REQ_PROJECT)
+        projects = _list_projects(req[const.APP_SETTINGS])
+        wti_key = projects.get(project_name)
+        if not wti_key:
+            msg = 'no wti_key or valid project in request query params'
+            logger.error(msg)
+            return web.HTTPBadRequest(reason=msg)
 
     content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
     if content_type not in WtiContentTypes.__members__:

@@ -2,6 +2,7 @@ ENCODING = 'utf-8'
 APP_SETTINGS = 'settings'
 
 REQ_APP_KEY = 'wti_apikey'
+REQ_PROJECT = 'project'
 REQ_TYPE_KEY = 'type'
 
 EMAIL_PROVIDER = 'srv.email_provider'
