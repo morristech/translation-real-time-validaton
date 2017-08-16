@@ -41,35 +41,17 @@ async def new_translation(req):
         return web.HTTPBadRequest(reason=msg)
     content_type = WtiContentTypes[content_type]
 
-    data = await req.post()
+    data = await req.json()
     if 'payload' not in data:
         logger.error('payload not in request data')
         return web.HTTPBadRequest(reason='payload not in request data')
 
-    payload = json.loads(data['payload'])
+    payload = data['payload']
     payload = payload if isinstance(payload, list) else [payload]
     wti_client = wti.WtiClient(wti_key)
     asyncio.ensure_future(validator.check_translations(req.app, wti_client, content_type, payload))
 
     req.app[const.STATS].increment('validation.count')
-
-    return web.Response()
-
-
-async def project(req):
-    """
-    @api {POST} /projects/{api_key} Validate
-    @apiGroup Projects
-    @apiDescription Schedule project validation and notify via provided email.
-    @apiParam {string} api_key
-    @apiParam (POST Parameters) {string} email email to notify
-    """
-    # api_key = req.match_info['api_key']
-    # params = yield from req.post()
-    # user_email = params['email']
-
-    # req.app[const.ASYNC_WORKER].start(
-    #     tasks.validate_project, api_key, mailman_endpoint, user_email)
 
     return web.Response()
 
@@ -84,4 +66,4 @@ def init(router):
 
     router.add_route('GET', '/healthcheck', healthcheck)
     router.add_route('POST', '/translations', new_translation)
-    router.add_route('POST', '/zendesk/sync', zendesk_sync)
+    # router.add_route('POST', '/zendesk/sync', zendesk_sync)
