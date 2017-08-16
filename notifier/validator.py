@@ -21,7 +21,7 @@ async def _check_translation(app, wti_client, content_type, translation):
     base_string = await wti_client.string(translation['string_id'], project.master_locale)
     translated_string = WtiString(translation['string_id'], translation['locale'], translation['translation']['text'])
     diff = await app.loop.run_in_executor(None, compare.diff, wti_client, project, base_string, translated_string)
-    if diff:
+    if diff and (diff.url_errors or diff.md_error):
         logger.info('errors found in string %s, project %s', translation['string_id'], translation['project_id'])
         user = await wti_client.user(translation['user_id'])
         await mailer.send(app, user.email, diff)

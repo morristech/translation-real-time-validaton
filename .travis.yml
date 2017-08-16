@@ -9,4 +9,3 @@ install:
 script:
   - flake8 notifier tests
   - nosetests
-  - apidoc -i notifier
