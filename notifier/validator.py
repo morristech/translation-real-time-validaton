@@ -30,4 +30,3 @@ async def _check_translation(app, wti_client, content_type, translation):
             await wti_client.change_status(translated_string)
     else:
         app[const.STATS].increment('validation.success')
-
