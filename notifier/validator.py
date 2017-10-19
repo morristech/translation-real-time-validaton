@@ -31,6 +31,3 @@ async def _check_translation(app, wti_client, content_type, translation):
     else:
         app[const.STATS].increment('validation.success')
 
-
-async def validate_project(wti_key, mail_client, user_email):
-    pass

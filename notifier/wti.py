@@ -121,7 +121,7 @@ class WtiClient:
 
     async def change_status(self, translated_string, status=WtiTranslationStatus.unverified):
         data = {'text': translated_string.text, 'status': status.value, 'minor_change': False}
-        url = STATUS_URL % (self._api_key, translated_string.locale, translated_string.id)
+        url = STATUS_URL % (self._api_key, translated_string.id, translated_string.locale)
         res = await self._update_data(url, data)
         return res
 
