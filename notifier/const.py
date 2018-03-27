@@ -4,6 +4,7 @@ APP_SETTINGS = 'settings'
 REQ_APP_KEY = 'wti_apikey'
 REQ_PROJECT = 'project'
 REQ_TYPE_KEY = 'type'
+REQ_CALLBACK_KEY = 'callback_url'
 
 EMAIL_PROVIDER = 'srv.email_provider'
 WTI_DYNAMIC_CONTENT = 'srv.wti_dynamic_content'

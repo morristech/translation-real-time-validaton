@@ -1,4 +1,5 @@
 import logging
+import aiohttp
 
 from . import compare, mailer, const
 from .model import *
@@ -7,13 +8,21 @@ logger = logging.getLogger(__name__)
 UPDATE_PATH = 'admin/refresh_wti'
 
 
-async def check_translations(app, wti_client, content_type, payload):
+async def check_translations(app, wti_client, content_type, payload, callback_url=None):
     logger.info('translating %s segments', len(payload))
     for data in payload:
         if data['translation'].get('status') != WtiTranslationStatus.proofread.value:
             continue
         logger.debug('translating %s', data)
-        await _check_translation(app, wti_client, content_type, data)
+        is_successful = await _check_translation(app, wti_client, content_type, data)
+        if not is_successful and callback_url:
+            logger.debug('notifying external service via callback url = %s', callback_url)
+            async with aiohttp.ClientSession() as session:
+                async with session.post(callback_url, json=payload) as resp:
+                    try:
+                        resp.raise_for_status()
+                    except aiohttp.ClientResponseError:
+                        logger.exception('Could not notify external service via callback: %s', callback_url)
 
 
 async def _check_translation(app, wti_client, content_type, translation):
@@ -28,5 +37,7 @@ async def _check_translation(app, wti_client, content_type, translation):
         app[const.STATS].increment('validation.failed')
         if user.role != WtiUserRoles.manager:
             await wti_client.change_status(translated_string)
+        return False
     else:
         app[const.STATS].increment('validation.success')
+        return True
