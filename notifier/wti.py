@@ -129,18 +129,21 @@ class WtiClient:
         for file in files:
             if file['id'] == file_id:
                 return file['name']
-        logger.error('No file could be found for id %s in project files {}'.format(file_id, files))
+        logger.error('No file could be found for id {} in project files {}'.format(file_id, files))
         return ''
 
     async def project(self, file_id, content_type):
         url = PROJECT_URL % self._api_key
         data = await self._request_data(url)
-        project_data = data['project']
-        master_locale = project_data['source_locale']['code']
-        project_name = project_data['name']
-        project_id = project_data['id']
-        filename = self._filename(project_data['project_files'], file_id)
-        return WtiProject(project_id, project_name, master_locale, filename, content_type)
+        try:
+            project_data = data['project']
+            master_locale = project_data['source_locale']['code']
+            project_name = project_data['name']
+            project_id = project_data['id']
+            filename = self._filename(project_data['project_files'], file_id)
+            return WtiProject(project_id, project_name, master_locale, filename, content_type)
+        except KeyError:
+            logger.exception('Unexpected response from WTI %s', data)
 
     def section_link(self, project, translated_string):
         return SECTION_URL % (project.id, project.name, project.master_locale, translated_string.locale,
