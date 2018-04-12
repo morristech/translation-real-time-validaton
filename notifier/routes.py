@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 
 from aiohttp import web
@@ -33,12 +34,20 @@ async def new_translation(req):
     @api {POST} /translations/?wti_apikey={}&type={} Validate translation
     @apiGroup Webhooks
     @apiDescription WTI webhook endpoint. Schedule translation validation task.
+    @apiParam {string} project project name, allows to match wti key from app settings
     @apiParam {string} wti_apikey
     @apiParam {string} type *OPTIONAL* Default: `md`. Supported: `md`, `ios`, `java`.
+    @apiParam {string} callback_url *OPTIONAL* when validation finishes, callback request can be send
     @apiParam (Request JSON) {string} payload WTI payload
 
     @apiError 400 Missing `wti_key` or `payload`
     """
+    try:
+        data = await req.json()
+        logger.info('Payload %s', data)
+    except json.decoder.JSONDecodeError:
+        return web.HTTPBadRequest(reason='malformed body, expected json')
+
     wti_key = req.GET.get(const.REQ_APP_KEY)
     if not wti_key:
         project_name = req.GET.get(const.REQ_PROJECT)
@@ -56,7 +65,6 @@ async def new_translation(req):
         return web.HTTPBadRequest(reason=msg)
     content_type = WtiContentTypes[content_type]
 
-    data = await req.json()
     if 'payload' not in data:
         logger.error('payload not in request data')
         return web.HTTPBadRequest(reason='payload not in request data')
@@ -64,7 +72,9 @@ async def new_translation(req):
     payload = data['payload']
     payload = payload if isinstance(payload, list) else [payload]
     wti_client = wti.WtiClient(wti_key)
-    asyncio.ensure_future(validator.check_translations(req.app, wti_client, content_type, payload))
+    callback_url = req.GET.get(const.REQ_CALLBACK_KEY)
+    asyncio.ensure_future(validator.check_translations(req.app, wti_client, content_type, payload,
+                                                       callback_url=callback_url))
 
     req.app[const.STATS].increment('validation.count')
 
