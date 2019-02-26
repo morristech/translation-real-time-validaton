@@ -14,7 +14,7 @@ deps= [
     'git://github.com/KeepSafe/content-validator.git#egg=content_validator'
 ]
 reqs= [
-    'aiohttp==3.5.4',
+    'aiohttp==0.21.2',
     'gunicorn==19.3.0',
     'docopt==0.4.0',
     'hoep==1.0.2',
