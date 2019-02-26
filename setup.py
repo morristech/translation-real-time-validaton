@@ -9,10 +9,7 @@ def read(f):
 
 #install_reqs = parse_requirements('requirements.txt', session=PipSession())
 #reqs = [str(ir.req) for ir in install_reqs]
-deps= [
-    'git://github.com/KeepSafe/html-structure-diff.git@#egg=sdiff',
-    'git://github.com/KeepSafe/content-validator.git#egg=content_validator'
-]
+
 reqs= [
     'aiohttp==0.21.2',
     'gunicorn==19.3.0',
@@ -26,8 +23,13 @@ reqs= [
     'pybars3==0.9.1',
     'raven==5.26.0',
     'datadog==0.14.0',
-    'content-validator',
-    'sdiff'
+    'content_validator @ https://github.com/KeepSafe/content-validator/tarball/master#egg=content_validator',
+    'sdiff @ https://github.com/KeepSafe/html-structure-diff/tarball/master#egg=sdiff'
+]
+
+dev= [
+    'nose==1.3.7',
+    'flake8==2.5.4'
 ]
 
 setup(name='ks-translation-notifier',
@@ -46,7 +48,9 @@ setup(name='ks-translation-notifier',
       package_data={'notifier': ['templates/*.css', 'templates/*.hbs']},
       namespace_packages=[],
       install_requires = reqs,
-      dependency_links = deps,
+      extras_require= {
+          'dev':dev
+      },
       entry_points={
           'paste.app_factory': ['app = notifier:app']
       },
