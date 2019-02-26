@@ -11,7 +11,7 @@ def read(f):
 #reqs = [str(ir.req) for ir in install_reqs]
 
 reqs= [
-    'aiohttp==0.21.2',
+    'aiohttp<3.4,>=3',
     'gunicorn==19.3.0',
     'docopt==0.4.0',
     'hoep==1.0.2',
@@ -23,8 +23,8 @@ reqs= [
     'pybars3==0.9.1',
     'raven==5.26.0',
     'datadog==0.14.0',
-    'content_validator @ https://github.com/KeepSafe/content-validator/tarball/master#egg=content_validator',
-    'sdiff @ https://github.com/KeepSafe/html-structure-diff/tarball/master#egg=sdiff'
+    'content_validator @ git://github.com/KeepSafe/content-validator.git#egg=content_validator',
+    'sdiff @ git://github.com/KeepSafe/html-structure-diff.git#egg=sdiff'
 ]
 
 dev= [
