@@ -23,8 +23,8 @@ reqs= [
     'pybars3==0.9.1',
     'raven==5.26.0',
     'datadog==0.14.0',
-    'content_validator @ git://github.com/KeepSafe/content-validator.git#egg=content_validator',
-    'sdiff @ git://github.com/KeepSafe/html-structure-diff.git#egg=sdiff'
+    'content_validator',
+    'sdiff'
 ]
 
 dev= [

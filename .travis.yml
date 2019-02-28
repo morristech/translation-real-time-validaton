@@ -2,6 +2,9 @@ language: python
 python:
   - "3.5"
 # command to install dependencies
+before_install:
+  - pip install git+https://github.com/KeepSafe/content-validator.git
+  - pip install git+https://github.com/KeepSafe/html-structure-diff.git
 install:
   - pip install -r requirements-dev.txt
   - npm install apidoc
