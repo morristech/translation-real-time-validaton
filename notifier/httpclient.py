@@ -46,10 +46,6 @@ class HttpClient(object):
         self._success_codes = success_codes
         self._session = aiohttp.ClientSession(*args, loop=self._loop, **kwargs)
 
-    def __del__(self):
-        if self._session and not self._session.closed:
-            self._session.close()
-
     async def _request(self, method, url, *args, max_wait=0, **kwargs):
         task = self._session.request(method, url, *args, **kwargs)
         max_wait = max_wait if max_wait else self._max_wait

@@ -7,6 +7,11 @@ from . import const, mailer, wti, zendesk, routes, notifier, stats
 logger = logging.getLogger(__name__)
 
 
+async def stop_clients(app):
+    await app[const.ZENDESK_DC].shutdown()
+    await app[const.SLACK_NOTIFIER].shutdown()
+
+
 def app(global_config, **settings):
     logger.info('Loading configuration')
     loop = asyncio.get_event_loop()
@@ -21,5 +26,6 @@ def app(global_config, **settings):
     app[const.STATS] = stats.Stats(settings['datadog_api_key'])
 
     routes.init(app.router)
+    app.on_cleanup.append(stop_clients)
 
     return app

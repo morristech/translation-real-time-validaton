@@ -15,6 +15,9 @@ class SlackNotifier:
         self._notify = partial(self._client.post, settings['slack.token'])
         self._slack_username = settings['slack.username']
 
+    async def shutdown(self):
+        await self._client.close()
+
     async def notify(self, keys):
         message = 'translations updated for following keys: %s' % keys
         payload = {'username': self._slack_username, 'text': message}
