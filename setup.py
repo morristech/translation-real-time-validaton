@@ -1,7 +1,5 @@
 import os
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
-from pip.download import PipSession
 
 version = '0.3.1'
 
@@ -9,9 +7,10 @@ version = '0.3.1'
 def read(f):
     return open(os.path.join(os.path.dirname(__file__), f)).read().strip()
 
-install_reqs = parse_requirements('requirements.txt', session=PipSession())
-reqs = [str(ir.req) for ir in install_reqs]
 
+reqs = [
+    'aiohttp >=3, <3.4',
+]
 
 setup(name='ks-translation-notifier',
       version=version,
@@ -28,7 +27,7 @@ setup(name='ks-translation-notifier',
       packages=find_packages(exclude=['tests']),
       package_data={'notifier': ['templates/*.css', 'templates/*.hbs']},
       namespace_packages=[],
-      install_requires = reqs,
+      install_requires=reqs,
       entry_points={
           'paste.app_factory': ['app = notifier:app']
       },
