@@ -2,7 +2,7 @@ import asyncio
 import os
 import simplejson as json
 from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, Mock
 
 from notifier import const
 
@@ -39,6 +39,18 @@ class AppMock(object):
         return value
 
 
+class AsyncContext(Mock):
+    def __init__(self, *args, context=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._context = context
+
+    async def __aenter__(self):
+        return self._context
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+
 class AsyncTestCase(TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -49,7 +61,7 @@ class AsyncTestCase(TestCase):
 
         self.mock_request_patch = patch('aiohttp.request')
         self.mock_request = self.mock_request_patch.start()
-        self.mock_request.return_value = self.make_res()
+        self.mock_request.return_value = AsyncContext(context=self.make_response())
 
         self.mock_session_patch = patch('aiohttp.ClientSession')
         self.mock_session = self.mock_session_patch.start()
@@ -86,13 +98,17 @@ class AsyncTestCase(TestCase):
         return fut
 
     def make_res(self, body='', status=200, headers=None):
+        resp = self.make_response(body, status, headers)
+        return self.make_fut(resp)
+
+    def make_response(self, body='', status=200, headers=None):
         res = MagicMock()
         res.status = status
         res.headers = headers or {}
         res.read.return_value = self.make_fut(body.encode('utf-8'))
         res.json.return_value = self.make_fut(json.loads(body or '{}'))
         res.release.return_value = self.make_fut()
-        return self.make_fut(res)
+        return res
 
     def make_res_json(self, body={}, status=200):
         return self.make_res(json.dumps(body), status)

@@ -1,8 +1,9 @@
 from unittest.mock import MagicMock
 
-from . import AsyncTestCase
+from . import AsyncTestCase, AsyncContext
 from notifier import compare
 from notifier.model import *
+from validator.checks.url import DEFAULT_USER_AGENT
 
 
 class TestCompare(AsyncTestCase):
@@ -26,10 +27,13 @@ class TestCompare(AsyncTestCase):
 
     def test_ios_txt_success(self):
         self._test_ios_text()
-        self.mock_request.assert_called_once_with('get', 'http://www.link.com', headers={})
+        headers = {
+            'User-Agent': DEFAULT_USER_AGENT
+        }
+        self.mock_request.assert_called_once_with('get', 'http://www.link.com', headers=headers)
 
     def test_ios_txt_fail(self):
-        self.mock_request.return_value = self.make_res(status=404)
+        self.mock_request.return_value = AsyncContext(context=self.make_response(status=404))
         errors = self._test_ios_text()
         self.assertEqual(1, len(errors.url_errors))
 
