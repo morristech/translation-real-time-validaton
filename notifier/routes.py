@@ -73,15 +73,15 @@ async def new_translation(req):
     payload = payload if isinstance(payload, list) else [payload]
     wti_client = wti.WtiClient(wti_key)
     callback_url = req.query.get(const.REQ_CALLBACK_KEY)
-    asyncio.ensure_future(validator.check_translations(req.app, wti_client, content_type, payload,
-                                                       callback_url=callback_url))
+    await asyncio.shield(validator.check_translations(req.app, wti_client, content_type, payload,
+                                                      callback_url=callback_url))
 
     req.app[const.STATS].increment('validation.count')
     return web.Response()
 
 
 async def zendesk_sync(req):
-    asyncio.ensure_future(sync.sync_zendesk(req.app))
+    await asyncio.shield(sync.sync_zendesk(req.app))
     return web.Response()
 
 
