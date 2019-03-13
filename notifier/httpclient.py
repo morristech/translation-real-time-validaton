@@ -46,17 +46,19 @@ class HttpClient(object):
         self._success_codes = success_codes
         self._session = aiohttp.ClientSession(*args, loop=self._loop, **kwargs)
 
-    async def _request(self, method, url, *args, max_wait=0, **kwargs):
-        task = self._session.request(method, url, *args, **kwargs)
-        max_wait = max_wait if max_wait else self._max_wait
-        if max_wait > 0:
-            task = asyncio.wait_for(task, max_wait, loop=self._loop)
+    async def bootstrap(self):
+        self._session = await self._session.__aenter__()
+
+    async def _request(self, method, url, *args, **kwargs):
+        if self._max_wait > 0:
+            kwargs.setdefault('timeout', self._max_wait)
         try:
-            res = await task
-            return res
-        except asyncio.TimeoutError:
+            async with self._session.request(method, url, *args, **kwargs) as res:
+                return res
+        except aiohttp.client_exceptions.ServerTimeoutError:
             return TimeoutResponse()
-        except (aiohttp.errors.ClientOSError, aiohttp.errors.ClientResponseError, aiohttp.ClientConnectionError):
+        except (aiohttp.client_exceptions.ClientOSError, aiohttp.client_exceptions.ClientResponseError,
+                aiohttp.ClientConnectionError):
             logger.exception('unable to connect to client url:%s', url)
             return ErrorResponse()
 
@@ -67,8 +69,7 @@ class HttpClient(object):
         while retries > 0:
             retries -= 1
             if res:
-                await res.release()
-            res = await self._request(*args, max_wait=max_wait, **kwargs)
+                res = await self._request(*args, timeout=max_wait, **kwargs)
             if res.status in success_codes:
                 return res
         return res
@@ -79,7 +80,7 @@ class HttpClient(object):
             res = await self._request_and_retry(
                 method, url, *args, success_codes=success_codes, max_wait=max_wait, max_retries=max_retries, **kwargs)
         else:
-            res = await self._request(method, url, *args, max_wait=max_wait, **kwargs)
+            res = await self._request(method, url, *args, timeout=max_wait, **kwargs)
         return res
 
     async def get(self, path, *args, **kwargs):

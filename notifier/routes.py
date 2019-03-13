@@ -48,9 +48,9 @@ async def new_translation(req):
     except json.decoder.JSONDecodeError:
         return web.HTTPBadRequest(reason='malformed body, expected json')
 
-    wti_key = req.GET.get(const.REQ_APP_KEY)
+    wti_key = req.query.get(const.REQ_APP_KEY)
     if not wti_key:
-        project_name = req.GET.get(const.REQ_PROJECT)
+        project_name = req.query.get(const.REQ_PROJECT)
         projects = _list_projects(req.app[const.APP_SETTINGS])
         wti_key = projects.get(project_name)
         if not wti_key:
@@ -58,7 +58,7 @@ async def new_translation(req):
             logger.error(msg)
             return web.HTTPBadRequest(reason=msg)
 
-    content_type = req.GET.get(const.REQ_TYPE_KEY, 'md')
+    content_type = req.query.get(const.REQ_TYPE_KEY, 'md')
     if content_type not in WtiContentTypes.__members__:
         msg = 'content_type %s not valid' % content_type
         logger.error(msg)
@@ -72,17 +72,16 @@ async def new_translation(req):
     payload = data['payload']
     payload = payload if isinstance(payload, list) else [payload]
     wti_client = wti.WtiClient(wti_key)
-    callback_url = req.GET.get(const.REQ_CALLBACK_KEY)
-    asyncio.ensure_future(validator.check_translations(req.app, wti_client, content_type, payload,
-                                                       callback_url=callback_url))
+    callback_url = req.query.get(const.REQ_CALLBACK_KEY)
+    await asyncio.shield(validator.check_translations(req.app, wti_client, content_type, payload,
+                                                      callback_url=callback_url))
 
     req.app[const.STATS].increment('validation.count')
-
     return web.Response()
 
 
 async def zendesk_sync(req):
-    asyncio.ensure_future(sync.sync_zendesk(req.app))
+    await asyncio.shield(sync.sync_zendesk(req.app))
     return web.Response()
 
 
