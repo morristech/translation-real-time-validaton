@@ -1,4 +1,4 @@
-from . import AsyncTestCase, read_fixture
+from . import AsyncTestCase, read_fixture, AsyncContext
 
 from notifier import wti
 from notifier.model import *
@@ -10,13 +10,14 @@ class TestTranslate(AsyncTestCase):
         self.client = wti.WtiClient('dummy_key')
 
     def test_connection_error(self):
-        self.mock_session_get.return_value = self.make_res(status=500)
+        self.mock_session_new.get.return_value = AsyncContext(context=self.make_response(status=500))
         with self.assertRaises(WtiError):
             self.coro(self.client.string('dummy_id', 'dummy_locale'))
 
     def test_string(self):
         expected = WtiString(22683983, 'pl', '#bbb\n\nbbb')
-        self.mock_session_get.return_value = self.make_res(body=read_fixture('translation_pl.json'))
+        fixture = read_fixture('translation_pl.json')
+        self.mock_session_new.get.return_value = AsyncContext(context=self.make_response(body=fixture))
         actual = self.coro(self.client.string('dummy_id', 'dummy_locale'))
         self.assertEqual(expected, actual)
 
@@ -26,13 +27,14 @@ class TestTranslate(AsyncTestCase):
             'dc.makro_password-how_to_reset_password': 3879008,
             'dc.makro_password-uninstall_reinstall': 3879009
         }
-        self.mock_session_get.return_value = self.make_res(body=read_fixture('strings.json'))
+        fixture = read_fixture('strings.json')
+        self.mock_session_new.get.return_value = AsyncContext(context=self.make_response(body=fixture))
         actual = self.coro(self.client.strings_ids())
         self.assertEqual(expected, actual)
 
     def test_user(self):
         body = read_fixture('users.json')
-        self.mock_session_get.return_value = self.make_res(body=body)
+        self.mock_session_new.get.return_value = AsyncContext(context=self.make_response(body=body))
         user = self.coro(self.client.user(19362))
         self.assertEqual(user.id, 19362)
         self.assertEqual(user.email, 'test_test@gmail.com')
@@ -47,7 +49,7 @@ class TestTranslate(AsyncTestCase):
     def test_project(self):
         expected = WtiProject(9800, 'testp', 'en-US', 'activate_trial.xml', WtiContentTypes.md)
         body = read_fixture('project.json')
-        self.mock_session_get.return_value = self.make_res(body=body)
+        self.mock_session_new.get.return_value = AsyncContext(context=self.make_response(body=body))
         actual = self.coro(self.client.project(395411, WtiContentTypes.md))
         self.assertEqual(expected, actual)
 
@@ -63,11 +65,10 @@ class TestTranslate(AsyncTestCase):
             ', <https://webtranslateit.com/api/projects/xxx/strings.json?page=4>; rel="last", '
             '<https://webtranslateit.com/api/projects/xxx/strings.json?page=1>; rel="first"'
         }
-        self.mock_session_get.side_effect = iter([
-            self.make_res(
-                body=read_fixture('strings.json'), headers=headers),
-            self.make_res(body=read_fixture('strings_page.json'))
+        self.mock_session_new.get.side_effect = iter([
+            AsyncContext(context=self.make_response(body=read_fixture('strings.json'), headers=headers)),
+            AsyncContext(context=self.make_response(body=read_fixture('strings_page.json')))
         ])
         actual = self.coro(self.client.strings_ids())
         self.assertEqual(expected, actual)
-        self.mock_session_get.assert_called_with('https://webtranslateit.com/api/projects/xxx/strings.json?page=2')
+        self.mock_session_new.get.assert_called_with('https://webtranslateit.com/api/projects/xxx/strings.json?page=2')

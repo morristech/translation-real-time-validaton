@@ -96,8 +96,8 @@ class SendgridProvider:
 
         query = self._create_query(recipient, html)
         query['x-smtpapi'] = self._create_smtpapi()
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             logger.debug('sending email to %s', recipient)
-            res = await session.post(self.URL, data=query)
-        result = await self._handle_response(res)
-        return result
+            async with session.post(self.URL, data=query) as res:
+                result = await self._handle_response(res)
+                return result

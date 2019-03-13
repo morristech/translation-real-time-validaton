@@ -15,6 +15,9 @@ class SlackNotifier:
         self._notify = partial(self._client.post, settings['slack.token'])
         self._slack_username = settings['slack.username']
 
+    async def bootstrap(self):
+        await self._client.bootstrap()
+
     async def shutdown(self):
         await self._client.close()
 

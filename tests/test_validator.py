@@ -1,7 +1,7 @@
 import json
 from unittest.mock import MagicMock
 
-from . import AsyncTestCase, read_fixture
+from . import AsyncTestCase, read_fixture, AsyncContext
 from notifier import const, validator, wti
 from notifier.model import *
 
@@ -16,9 +16,10 @@ class TestValidator(AsyncTestCase):
         payload = [read_fixture('payload.json', decoder=json.loads)]
         client = wti.WtiClient('dummy_api')
 
-        self.mock_session_get.side_effect = iter([
-            self.make_res(read_fixture('project.json')), self.make_res(read_fixture('translation_en-US.json')),
-            self.make_res(read_fixture('users.json'))
+        self.mock_session_new.get.side_effect = iter([
+            AsyncContext(name='session.<request> context', context=self.make_response(read_fixture('project.json'))),
+            AsyncContext(name='session.<request> context', context=self.make_response(read_fixture('translation_en-US.json'))),
+            AsyncContext(name='session.<request> context', context=self.make_response(read_fixture('users.json'))),
         ])
 
         self.coro(validator.check_translations(app, client, WtiContentTypes.md, payload))

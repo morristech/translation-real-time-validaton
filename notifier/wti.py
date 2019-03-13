@@ -48,38 +48,34 @@ class WtiClient:
 
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)
-        with aiohttp.ClientSession() as session:
-            res = await session.get(url)
-            data = await self._handle_response(url, res)
-            return data
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as res:
+                data = await self._handle_response(url, res)
+                return data
 
     async def _request_paging_data(self, url):
         logger.debug('getting wti data url:%s', url)
         result = []
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             for i in range(10):
-                res = await session.get(url)
-                data = await self._handle_response(url, res)
-                result.extend(data)
-                url = self._next_page_link(res.headers)
-                if not url:
-                    break
+                async with session.get(url) as res:
+                    data = await self._handle_response(url, res)
+                    result.extend(data)
+                    url = self._next_page_link(res.headers)
+                    if not url:
+                        break
         return result
 
     async def _update_data(self, url, data):
         logger.debug('updating wti data url:%s', url)
-        try:
-            headers = {'content-type': 'application/json'}
-            with aiohttp.ClientSession() as session:
-                res = await asyncio.wait_for(session.post(url, data=json.dumps(data), headers=headers), 5)
+        headers = {'content-type': 'application/json'}
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=json.dumps(data), headers=headers, timeout=5) as res:
                 if res.status in [200, 201, 202]:
-                    await res.release()
                     return True
                 else:
                     msg = await res.text()
                     logger.error('request to wti failed status:%s, message: %s', res.status, msg)
-        except asyncio.TimeoutError:
-            logging.error('Request to %s took more then 5s to finish, dropping', url)
         return False
 
     async def string(self, string_id, locale):

@@ -7,9 +7,14 @@ from . import const, mailer, wti, zendesk, routes, notifier, stats
 logger = logging.getLogger(__name__)
 
 
-async def stop_clients(app):
+async def stop_http_clients(app):
     await app[const.ZENDESK_DC].shutdown()
     await app[const.SLACK_NOTIFIER].shutdown()
+
+
+async def start_http_clients(app):
+    await app[const.ZENDESK_DC].bootstrap()
+    await app[const.SLACK_NOTIFIER].bootstrap()
 
 
 def app(global_config, **settings):
@@ -26,6 +31,7 @@ def app(global_config, **settings):
     app[const.STATS] = stats.Stats(settings['datadog_api_key'])
 
     routes.init(app.router)
-    app.on_cleanup.append(stop_clients)
+    app.on_startup.append(start_http_clients)
+    app.on_cleanup.append(stop_http_clients)
 
     return app

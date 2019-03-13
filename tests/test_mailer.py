@@ -50,4 +50,4 @@ class TestProvider(AsyncTestCase):
 
     def test_happy_path(self):
         self.coro(self.provider.send('test@test.com', 'html'))
-        self.assertTrue(self.mock_session_post.called)
+        self.assertTrue(self.mock_session_new.post.called)

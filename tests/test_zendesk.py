@@ -1,4 +1,4 @@
-from . import AsyncTestCase, read_fixture
+from . import AsyncTestCase, read_fixture, AsyncContext
 
 from notifier import zendesk
 from notifier.model import *
@@ -12,6 +12,7 @@ class TestZendesk(AsyncTestCase):
             'zendesk.token': 'dummy_token',
             'zendesk.default_locale': 'fr'
         })
+        self.coro(self.client.bootstrap())
         self.locales = {'fr': 16}
 
     def test_items(self):
@@ -21,14 +22,16 @@ class TestZendesk(AsyncTestCase):
             'dc.auto_reply_check_tutorial', 'dc.makro_bug-sorry_about_the_migration_we_will_send_a_tool',
             'dc.url_survey'
         ]
-        self.mock_session().request.side_effect = iter([self.make_res(read_fixture('zendesk_items.json'))])
+        context = AsyncContext(context=self.make_response(read_fixture('zendesk_items.json')))
+        self.mock_session_new.request.side_effect = iter([context])
         items = self.coro(self.client.items(self.locales))
         self.assertCountEqual(expected, items.keys())
 
     def test_items_pagination(self):
         expected = ['dc.auto_reply_update_to_latest_verson', 'dc.auto_reply_check_tutorial']
-        self.mock_session().request.side_effect = iter(
-            [self.make_res(read_fixture('zendesk_item_page.json')), self.make_res(read_fixture('zendesk_item.json'))])
+        zendesk_item_page_context = AsyncContext(context=self.make_response(read_fixture('zendesk_item_page.json')))
+        zendesk_item_context = AsyncContext(context=self.make_response(read_fixture('zendesk_item.json')))
+        self.mock_session_new.request.side_effect = iter([zendesk_item_page_context, zendesk_item_context])
         items = self.coro(self.client.items(self.locales))
         self.assertCountEqual(expected, items.keys())
 
@@ -46,7 +49,8 @@ class TestZendesk(AsyncTestCase):
             27: 85790,
             66: 54276
         }
-        self.mock_session().request.side_effect = iter([self.make_res(read_fixture('zendesk_item.json'))])
+        context = AsyncContext(context=self.make_response(read_fixture('zendesk_item.json')))
+        self.mock_session_new.request.side_effect = iter([context])
         items = self.coro(self.client.items(self.locales))
         self.assertEqual(1, len(items))
         item = items['dc.auto_reply_update_to_latest_verson']
@@ -56,8 +60,9 @@ class TestZendesk(AsyncTestCase):
         dc_item = DynamicContentItem('dummy_key', 'wti_id', ZendeskItem('zendesk_id', 'name', 'text', {16: 'item_id'}))
         translations = [WtiString('id', 'fr', 'text')]
         self.coro(self.client.update(dc_item, translations, self.locales))
-        self.mock_session().request.assert_called_with(
+        self.mock_session_new.request.assert_called_with(
             'PUT',
             'https://keepsafe.zendesk.com/api/v2/dynamic_content/items/zendesk_id/variants/update_many.json',
             data='{"variants": [{"active": true, "content": "text",'
-            ' "default": false, "id": "item_id", "locale_id": 16}]}')
+            ' "default": false, "id": "item_id", "locale_id": 16}]}',
+            timeout=0)
