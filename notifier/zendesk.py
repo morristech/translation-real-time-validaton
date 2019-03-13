@@ -27,7 +27,7 @@ class ZendeskDynamicContent:
         self._client = httpclient.HttpClient(self.HOST, headers=headers)
         self.default_locale = settings.get('zendesk.default_locale', 'en-US')
         self._locales_mapping = {}
-        
+
     async def bootstrap(self):
         await self._client.bootstrap()
 

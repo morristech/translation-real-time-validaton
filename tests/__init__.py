@@ -73,13 +73,6 @@ class AsyncTestCase(TestCase):
         self.mock_session_new.request.return_value = self.mock_session_req
         self.mock_session.return_value = AsyncContext(name='new aiohttp.ClientSession context',
                                                       context=self.mock_session_new)
-        # self.mock_session_post = self.mock_session().__aenter__().post
-        # self.mock_session_post.return_value = self.make_res()
-        # self.mock_session_get = self.mock_session().__aenter__().get
-        # self.mock_session_get.return_value = self.make_res()
-        # self.mock_session_request = self.mock_session().__aenter__().request
-        # self.mock_session_request.return_value = self.make_res()
-
         self.mock_wait_patch = patch('asyncio.wait_for')
         self.mock_wait = self.mock_wait_patch.start()
 
