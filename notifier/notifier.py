@@ -2,6 +2,8 @@ import logging
 import json
 from functools import partial
 
+import aiohttp
+
 from . import httpclient
 
 logger = logging.getLogger(__name__)
@@ -24,9 +26,8 @@ class SlackNotifier:
     async def notify(self, keys):
         message = 'translations updated for following keys: %s' % keys
         payload = {'username': self._slack_username, 'text': message}
-        res = await self._notify(data=json.dumps(payload))
-        if res.status in [200, 201]:
-            await res.release()
-        else:
-            msg = await res.read()
-            logger.error('unable to post notification in slack status: %s, message: %s', res.status, msg)
+        try:
+            await self._notify(data=json.dumps(payload))
+        except aiohttp.ClientResponseError as ex:
+            msg = 'unable to post notification in slack status: %s, message: %s, request info: %s'
+            logger.error(msg, ex.status, ex.message, ex.request_info)
