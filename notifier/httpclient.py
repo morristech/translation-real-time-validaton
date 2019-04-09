@@ -6,37 +6,6 @@ from urllib.parse import urljoin
 logger = logging.getLogger(__name__)
 
 
-class FakeResponse(object):
-    def __init__(self, status):
-        self.status = status
-
-    @asyncio.coroutine
-    def read(self):
-        return b''
-
-    @asyncio.coroutine
-    def text(self):
-        return ''
-
-    @asyncio.coroutine
-    def json(self):
-        return {}
-
-    @asyncio.coroutine
-    def release(self):
-        pass
-
-
-class TimeoutResponse(FakeResponse):
-    def __init__(self):
-        super().__init__(504)
-
-
-class ErrorResponse(FakeResponse):
-    def __init__(self):
-        super().__init__(500)
-
-
 class HttpClient(object):
     def __init__(self, host, *args, loop=None, success_codes=(200, 201, 400), max_wait=0, max_retries=1, **kwargs):
         self._host = host
@@ -49,18 +18,14 @@ class HttpClient(object):
     async def bootstrap(self):
         self._session = await self._session.__aenter__()
 
-    async def _request(self, method, url, *args, **kwargs):
+    async def _request(self, method, url, **kwargs):
         if self._max_wait > 0:
             kwargs.setdefault('timeout', self._max_wait)
-        try:
-            async with self._session.request(method, url, *args, **kwargs) as res:
-                return res
-        except aiohttp.client_exceptions.ServerTimeoutError:
-            return TimeoutResponse()
-        except (aiohttp.client_exceptions.ClientOSError, aiohttp.client_exceptions.ClientResponseError,
-                aiohttp.ClientConnectionError):
-            logger.exception('unable to connect to client url:%s', url)
-            return ErrorResponse()
+        async with self._session.request(method, url, **kwargs) as res:
+            res.raise_for_status()
+            if 'application/json' in res.headers['CONTENT-TYPE'].lower():
+                return await res.json()
+            return await res.text()
 
     async def _request_and_retry(self, *args, success_codes=tuple(), max_wait=0, max_retries=1, **kwargs):
         retries = max_retries if max_retries > 1 else int(self._max_retries)

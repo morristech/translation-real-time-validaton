@@ -104,7 +104,10 @@ class AsyncTestCase(TestCase):
     def make_response(self, body='', status=200, headers=None):
         res = MagicMock()
         res.status = status
-        res.headers = headers or {}
+        res.headers = {
+            'CONTENT-TYPE': 'application/json'
+        }
+        res.headers.update(headers or {})
         res.read.return_value = self.make_fut(body.encode('utf-8'))
         res.json.return_value = self.make_fut(json.loads(body or '{}'))
         res.release.return_value = self.make_fut()

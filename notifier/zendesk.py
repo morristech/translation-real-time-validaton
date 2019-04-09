@@ -36,23 +36,20 @@ class ZendeskDynamicContent:
 
     async def _get_data(self, path):
         logger.debug('getting data from zendesk path:%s', path)
-        res = await self._client.get(path)
-        if res.status == 200:
-            data = await res.json()
+        try:
+            data = await self._client.get(path)
             return data
-        else:
-            await res.release()
-            logger.error('unable to get data from zendesk path:%s, status:%s', path, res.status)
-            return {}
+        except aiohttp.ClientResponseError as ex:
+            logger.error('unable to get data from zendesk path:%s status: %s, message: %s', path, ex.status, ex.message)
+        return {}
 
     async def _put_data(self, path, data, method='PUT'):
-        res = await self._client.request(method, path, data=json.dumps(data, sort_keys=True))
-        if res.status not in [200, 201]:
-            msg = await res.read()
-            logger.error('unable to update zendesk content status: %s, message: %s', res.status, msg)
+        try:
+            await self._client.request(method, path, data=json.dumps(data, sort_keys=True))
+            return True
+        except aiohttp.ClientResponseError as ex:
+            logger.error('unable to update zendesk content status: %s, message: %s', ex.status, ex.message)
             return False
-        await res.release()
-        return True
 
     async def locales(self):
         data = await self._get_data(self.LOCALES_PATH)
