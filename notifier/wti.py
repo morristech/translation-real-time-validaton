@@ -1,6 +1,7 @@
 import aiohttp
 import logging
 import json
+from pprint import pformat
 
 from .model import *
 
@@ -69,19 +70,20 @@ class WtiClient:
         logger.debug('updating wti data url:%s', url)
         headers = {'content-type': 'application/json'}
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=json.dumps(data), headers=headers, timeout=5) as res:
+            async with session.post(url, data=json.dumps(data), headers=headers) as res:
                 if res.status in [200, 201, 202]:
                     return True
                 else:
                     msg = await res.text()
-                    logger.error('request to wti failed status:%s, message: %s', res.status, msg)
+                    pdata = pformat(data)
+                    logger.error(f'request to wti failed status:{res.status}, message: {msg}, request data: {pdata}')
         return False
 
     async def string(self, string_id, locale):
         url = TRANSLATION_URL % (self._api_key, string_id, locale)
         data = await self._request_data(url)
         if data:
-            return WtiString(data['id'], data['locale'], data['text'])
+            return WtiString(data['id'], data['locale'], data['text'], WtiTranslationStatus(data['status']))
         else:
             return {}
 
