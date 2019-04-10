@@ -14,15 +14,15 @@ class TestCompare(AsyncTestCase):
 
     def test_strings(self):
         project = WtiProject('dummy_id', 'dummy_name', 'dummy_locale', 'file.strings', WtiContentTypes.ios)
-        base = WtiString('id1', 'locale1', 'aaa http://www.link.com aaa')
-        other = WtiString('id2', 'locale2', 'aaa')
+        base = WtiString('id1', 'locale1', 'aaa http://www.link.com aaa', 'STATUS')
+        other = WtiString('id2', 'locale2', 'aaa', 'STATUS')
         compare.diff(self.client, project, base, other)
         self.assertFalse(self.mock_request.called)
 
     def _test_ios_text(self):
         project = WtiProject('dummy_id', 'dummy_name', 'dummy_locale', 'file.txt', WtiContentTypes.ios)
-        base = WtiString('id1', 'locale1', 'aaa http://www.link.com aaa')
-        other = WtiString('id2', 'locale2', 'aaa')
+        base = WtiString('id1', 'locale1', 'aaa http://www.link.com aaa', 'STATUS')
+        other = WtiString('id2', 'locale2', 'aaa', 'STATUS')
         return compare.diff(self.client, project, base, other)
 
     def test_ios_txt_success(self):
@@ -39,15 +39,15 @@ class TestCompare(AsyncTestCase):
 
     def _test_md(self, other):
         project = WtiProject('dummy_id', 'dummy_name', 'dummy_locale', 'file.md', WtiContentTypes.md)
-        base = WtiString('id1', 'locale1', 'aaa\n\naaa')
+        base = WtiString('id1', 'locale1', 'aaa\n\naaa', 'STATUS')
         return compare.diff(self.client, project, base, other)
 
     def test_md_success(self):
-        other = WtiString('id2', 'locale2', 'bbb\n\nbbb')
+        other = WtiString('id2', 'locale2', 'bbb\n\nbbb', 'STATUS')
         errors = self._test_md(other)
         self.assertIsNone(errors.md_error)
 
     def test_md_fail(self):
-        other = WtiString('id2', 'locale2', 'bbb\nbbb')
+        other = WtiString('id2', 'locale2', 'bbb\nbbb', 'STATUS')
         errors = self._test_md(other)
         self.assertIsNotNone(errors.md_error)

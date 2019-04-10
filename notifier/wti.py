@@ -76,7 +76,8 @@ class WtiClient:
                 else:
                     msg = await res.text()
                     pdata = pformat(data)
-                    logger.error(f'request to wti failed status:{res.status}, message: {msg}, request data: {pdata}')
+                    log = 'request to wti failed status: %s, message: %s, request data: %s'
+                    logger.error(log, res.status, msg, pdata)
         return False
 
     async def string(self, string_id, locale):
