@@ -1,6 +1,7 @@
 import aiohttp
 import logging
 import json
+from pprint import pformat
 
 from .model import *
 
@@ -69,19 +70,21 @@ class WtiClient:
         logger.debug('updating wti data url:%s', url)
         headers = {'content-type': 'application/json'}
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=json.dumps(data), headers=headers, timeout=5) as res:
+            async with session.post(url, data=json.dumps(data), headers=headers) as res:
                 if res.status in [200, 201, 202]:
                     return True
                 else:
                     msg = await res.text()
-                    logger.error('request to wti failed status:%s, message: %s', res.status, msg)
+                    pdata = pformat(data)
+                    log = 'request to wti failed status: %s, message: %s, request data: %s'
+                    logger.error(log, res.status, msg, pdata)
         return False
 
     async def string(self, string_id, locale):
         url = TRANSLATION_URL % (self._api_key, string_id, locale)
         data = await self._request_data(url)
         if data:
-            return WtiString(data['id'], data['locale'], data['text'])
+            return WtiString(data['id'], data['locale'], data['text'], WtiTranslationStatus(data['status']))
         else:
             return {}
 
@@ -144,11 +147,12 @@ class WtiClient:
         return SECTION_URL % (project.id, project.name, project.master_locale, translated_string.locale,
                               translated_string.id)
 
-    async def update_translation(self, dc_item, locale):
+    async def update_translation(self, dc_item, locale, validation=True):
         url = TRANSLATION_URL % (self._api_key, dc_item.wti_id, locale)
         data = {
             'text': dc_item.zendesk_item.text,
             'status': WtiTranslationStatus.proofread.value,
-            'minor_change': False
+            'minor_change': False,
+            'validation': validation
         }
         await self._update_data(url, data)

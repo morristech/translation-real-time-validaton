@@ -58,7 +58,7 @@ class TestZendesk(AsyncTestCase):
 
     def test_update(self):
         dc_item = DynamicContentItem('dummy_key', 'wti_id', ZendeskItem('zendesk_id', 'name', 'text', {16: 'item_id'}))
-        translations = [WtiString('id', 'fr', 'text')]
+        translations = [WtiString('id', 'fr', 'text', 'STATUS')]
         self.coro(self.client.update(dc_item, translations, self.locales))
         self.mock_session_new.request.assert_called_with(
             'PUT',

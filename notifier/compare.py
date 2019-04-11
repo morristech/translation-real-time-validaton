@@ -43,4 +43,4 @@ def is_different(text1, text2):
     hash2.update(text2.encode(const.ENCODING))
     hash2 = hash2.hexdigest()
 
-    return hash1 == hash2
+    return hash1 != hash2
