@@ -1,7 +1,7 @@
 import os
 from setuptools import setup, find_packages
 
-version = '0.3.3'
+version = '0.3.4'
 
 
 def read(f):
@@ -10,6 +10,10 @@ def read(f):
 
 reqs = [
     'aiohttp >=3, <3.4',
+    'simplejson',
+    'pybars3 >= 0.9.1',
+    'inlinestyler >= 0.2.0',
+    'datadog >= 0.14'
 ]
 
 setup(name='ks-translation-notifier',
