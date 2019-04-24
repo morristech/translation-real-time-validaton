@@ -35,11 +35,9 @@ class WtiClient:
             data = await res.json()
             return data
         elif res.status in [502, 503]:
-            await res.release()
             logger.warning('wti request timed out for url:%s', url)
             return {}
         elif res.status == 404:
-            await res.release()
             logger.debug('data does not exist for url:%s', url)
             return {}
         else:
