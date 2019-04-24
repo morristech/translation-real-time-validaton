@@ -81,7 +81,6 @@ class AsyncTestCase(TestCase):
 
     def tearDown(self):
         self.loop.close()
-        self.mock_request_patch.stop()
         self.mock_session_patch.stop()
         self.mock_wait_patch.stop()
         self.mock_sleep_patch.stop()
