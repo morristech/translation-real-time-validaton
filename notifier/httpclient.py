@@ -7,12 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 class HttpClient(object):
-    def __init__(self, host, *args, loop=None, success_codes=(200, 201, 400), max_wait=0, max_retries=1, **kwargs):
+    def __init__(self, host, *args, loop=None, max_wait=0, max_retries=1, **kwargs):
         self._host = host
         self._loop = loop or asyncio.get_event_loop()
         self._max_wait = max_wait
         self._max_retries = max_retries
-        self._success_codes = success_codes
+        self._retry_delay = 1000
         self._session = aiohttp.ClientSession(*args, loop=self._loop, **kwargs)
 
     async def bootstrap(self):
@@ -27,23 +27,23 @@ class HttpClient(object):
                 return await res.json()
             return await res.text()
 
-    async def _request_and_retry(self, *args, success_codes=tuple(), max_wait=0, max_retries=1, **kwargs):
-        retries = max_retries if max_retries > 1 else int(self._max_retries)
-        success_codes = success_codes if success_codes else self._success_codes
-        res = None
-        while retries > 0:
-            retries -= 1
-            if res:
-                res = await self._request(*args, timeout=max_wait, **kwargs)
-            if res.status in success_codes:
-                return res
-        return res
+    async def _request_and_retry(self, *args, max_wait=0, max_retries=1, **kwargs):
+        retry_limit = max_retries if max_retries > 1 else int(self._max_retries)
+        retry = 0
+        data = None
+        while retry < retry_limit:
+            retry += 1
+            try:
+                data = await self._request(*args, timeout=max_wait, **kwargs)
+            except aiohttp.ClientError:
+                await asyncio.sleep(self._retry_delay ** retry)
+        return data
 
-    async def request(self, method, path, *args, success_codes=tuple(), max_wait=0, max_retries=1, **kwargs):
+    async def request(self, method, path, *args, max_wait=0, max_retries=1, **kwargs):
         url = urljoin(self._host, path.lstrip('/'))
         if self._max_retries > 1 or max_retries > 1:
             res = await self._request_and_retry(
-                method, url, *args, success_codes=success_codes, max_wait=max_wait, max_retries=max_retries, **kwargs)
+                method, url, *args, max_wait=max_wait, max_retries=max_retries, **kwargs)
         else:
             res = await self._request(method, url, *args, timeout=max_wait, **kwargs)
         return res
@@ -77,4 +77,5 @@ class HttpClient(object):
         return res
 
     async def close(self):
-        await self._session.close()
+        if not self._session.closed:
+            await self._session.close()
