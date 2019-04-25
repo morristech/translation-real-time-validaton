@@ -51,6 +51,11 @@ class AsyncContext(Mock):
         pass
 
 
+def raise_for_status(status, message, ex):
+    if status >= 400:
+        raise ex(None, None, status=status, message=message)
+
+
 class AsyncTestCase(TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -100,7 +105,7 @@ class AsyncTestCase(TestCase):
         resp = self.make_response(body, status, headers)
         return self.make_fut(resp)
 
-    def make_response(self, body='', status=200, headers=None):
+    def make_response(self, body='', status=200, headers=None, ex=aiohttp.ClientResponseError):
         res = MagicMock()
         res.status = status
         res.headers = {
@@ -110,6 +115,7 @@ class AsyncTestCase(TestCase):
         res.read.return_value = self.make_fut(body.encode('utf-8'))
         res.json.return_value = self.make_fut(json.loads(body or '{}'))
         res.release.return_value = self.make_fut()
+        res.raise_for_status = functools.partial(raise_for_status, status, body, ex)
         return res
 
     def make_res_json(self, body={}, status=200):
