@@ -7,22 +7,14 @@ from . import httpclient
 
 logger = logging.getLogger(__name__)
 
-TRANSLATION_URL = 'https://webtranslateit.com/api/projects/%s/strings/%s/locales/%s/translations.json'
-USERS_URL = 'https://webtranslateit.com/api/projects/%s/users.json'
-STATUS_URL = 'https://webtranslateit.com/api/projects/%s/strings/%s/locales/%s/translations'
-PROJECT_URL = 'https://webtranslateit.com/api/projects/%s.json'
-STRINGS_URL = 'https://webtranslateit.com/api/projects/%s/strings.json'
-CREATE_STRING_URL = 'https://webtranslateit.com/api/projects/%s/strings'
-SECTION_URL = 'https://webtranslateit.com/en/projects/%s-%s/locales/%s..%s/strings/%s'
-
 
 class WtiClient:
-    host = 'https://webtranslateit.com/api/projects'
+    host = 'https://webtranslateit.com/api/projects/'
     headers = {'content-type': 'application/json'}
 
     def __init__(self, api_key):
         self._api_key = api_key
-        self._client = httpclient.HttpClient(self.host, max_retries=3, headers=self.headers)
+        self._client = httpclient.HttpClient(self.host + self._api_key + '/', max_retries=3, headers=self.headers)
 
     async def shutdown(self):
         await self._client.close()
@@ -57,7 +49,7 @@ class WtiClient:
         return False
 
     async def string(self, string_id, locale):
-        url = TRANSLATION_URL % (self._api_key, string_id, locale)
+        url = '/strings/%s/locales/%s/translations.json' % (string_id, locale)
         data = await self._request_data(url)
         if data:
             return WtiString(data['id'], data['locale'], data['text'], WtiTranslationStatus(data['status']))
@@ -65,7 +57,7 @@ class WtiClient:
             return {}
 
     async def create_string(self, dc_item, default_locale):
-        url = CREATE_STRING_URL % self._api_key
+        url = '/strings'
         data = {
             'key': dc_item.key,
             'plural': False,
@@ -80,12 +72,12 @@ class WtiClient:
         await self._update_data(url, data)
 
     async def strings_ids(self):
-        url = STRINGS_URL % self._api_key
+        url = '/strings.json'
         data = await self._client.request('GET', url, follow_links=True)
         return {item['key']: item['id'] for item in data}
 
     async def user(self, user_id):
-        url = USERS_URL % self._api_key
+        url = '/users.json'
         users = await self._request_data(url)
         for user in users:
             if user.get('user_id') == user_id:
@@ -94,8 +86,8 @@ class WtiClient:
         return WtiUser(0, None, None)
 
     async def change_status(self, translated_string, status=WtiTranslationStatus.unverified):
+        url = '/strings/%s/locales/%s/translations' % (translated_string.id, translated_string.locale)
         data = {'text': translated_string.text, 'status': status.value, 'minor_change': False}
-        url = STATUS_URL % (self._api_key, translated_string.id, translated_string.locale)
         res = await self._update_data(url, data)
         return res
 
@@ -107,8 +99,7 @@ class WtiClient:
         return ''
 
     async def project(self, file_id, content_type):
-        url = PROJECT_URL % self._api_key
-        data = await self._request_data(url)
+        data = await self._request_data('')
         try:
             project_data = data['project']
             master_locale = project_data['source_locale']['code']
@@ -120,11 +111,12 @@ class WtiClient:
             logger.exception('Unexpected response from WTI %s', data)
 
     def section_link(self, project, translated_string):
-        return SECTION_URL % (project.id, project.name, project.master_locale, translated_string.locale,
+        section_url = 'https://webtranslateit.com/en/projects/%s-%s/locales/%s..%s/strings/%s'
+        return section_url % (project.id, project.name, project.master_locale, translated_string.locale,
                               translated_string.id)
 
     async def update_translation(self, dc_item, locale, validation=True):
-        url = TRANSLATION_URL % (self._api_key, dc_item.wti_id, locale)
+        url = '/strings/%s/locales/%s/translations.json' % (dc_item.wti_id, locale)
         data = {
             'text': dc_item.zendesk_item.text,
             'status': WtiTranslationStatus.proofread.value,
