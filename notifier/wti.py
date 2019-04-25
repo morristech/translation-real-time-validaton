@@ -1,9 +1,9 @@
 import aiohttp
 import logging
 import json
-from pprint import pformat
 
 from .model import *
+from . import httpclient
 
 logger = logging.getLogger(__name__)
 
@@ -16,66 +16,42 @@ CREATE_STRING_URL = 'https://webtranslateit.com/api/projects/%s/strings'
 SECTION_URL = 'https://webtranslateit.com/en/projects/%s-%s/locales/%s..%s/strings/%s'
 
 
-# TODO user httpclient
 class WtiClient:
+    host = 'https://webtranslateit.com/api/projects'
+    headers = {'content-type': 'application/json'}
+
     def __init__(self, api_key):
         self._api_key = api_key
+        self._client = httpclient.HttpClient(self.host, headers=self.headers)
 
-    def _next_page_link(self, headers):
-        header = headers.get('Link')
-        if header:
-            for link in header.split(','):
-                bits = link.split(';')
-                if bits[1].strip() == 'rel="next"':
-                    return bits[0].strip('<>')
-        return ''
+    async def shutdown(self):
+        await self._client.close()
 
-    async def _handle_response(self, url, res):
-        if res.status == 200:
-            data = await res.json()
-            return data
-        elif res.status in [502, 503]:
-            logger.warning('wti request timed out for url:%s', url)
-            return {}
-        elif res.status == 404:
+    async def bootstrap(self):
+        await self._client.bootstrap()
+
+    def _handle_response(self, url, ex):
+        if ex.status == 404:
             logger.debug('data does not exist for url:%s', url)
             return {}
         else:
-            msg = await res.read()
-            raise WtiError('unable to connect to wti, status: %s, message:%s' % (res.status, msg))
+            raise WtiError('unable to connect to wti, status: %s, message:%s' % (ex.status, ex.message))
 
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as res:
-                data = await self._handle_response(url, res)
-                return data
-
-    async def _request_paging_data(self, url):
-        logger.debug('getting wti data url:%s', url)
-        result = []
-        async with aiohttp.ClientSession() as session:
-            for i in range(10):
-                async with session.get(url) as res:
-                    data = await self._handle_response(url, res)
-                    result.extend(data)
-                    url = self._next_page_link(res.headers)
-                    if not url:
-                        break
-        return result
+        try:
+            data = await self._client.get(url)
+            return data
+        except aiohttp.ClientResponseError as ex:
+            self._handle_response(url, ex)
 
     async def _update_data(self, url, data):
         logger.debug('updating wti data url:%s', url)
-        headers = {'content-type': 'application/json'}
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=json.dumps(data), headers=headers) as res:
-                if res.status in [200, 201, 202]:
-                    return True
-                else:
-                    msg = await res.text()
-                    pdata = pformat(data)
-                    log = 'request to wti failed status: %s, message: %s, request data: %s'
-                    logger.error(log, res.status, msg, pdata)
+        try:
+            await self._client.post(url, data=json.dumps(data))
+            return data
+        except aiohttp.ClientResponseError as ex:
+            self._handle_response(url, ex)
         return False
 
     async def string(self, string_id, locale):
@@ -103,7 +79,7 @@ class WtiClient:
 
     async def strings_ids(self):
         url = STRINGS_URL % self._api_key
-        data = await self._request_paging_data(url)
+        data = await self._client.request('GET', url, follow_links=True)
         return {item['key']: item['id'] for item in data}
 
     async def user(self, user_id):

@@ -3,6 +3,8 @@ import os
 import simplejson as json
 from unittest import TestCase
 from unittest.mock import MagicMock, patch, Mock
+import functools
+import aiohttp
 
 from notifier import const
 

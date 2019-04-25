@@ -15,8 +15,9 @@ class TestValidator(AsyncTestCase):
 
         payload = [read_fixture('payload.json', decoder=json.loads)]
         client = wti.WtiClient('dummy_api')
+        self.coro(client.bootstrap())
 
-        self.mock_session_new.get.side_effect = iter([
+        self.mock_session_new.request.side_effect = iter([
             AsyncContext(context=self.make_response(read_fixture('project.json'))),
             AsyncContext(context=self.make_response(read_fixture('translation_en-US.json'))),
             AsyncContext(context=self.make_response(read_fixture('users.json'))),
@@ -32,8 +33,9 @@ class TestValidator(AsyncTestCase):
 
         payload = [read_fixture('payload.json', decoder=json.loads)]
         client = wti.WtiClient('dummy_api')
+        self.coro(client.bootstrap())
 
-        self.mock_session_new.get.side_effect = iter([
+        self.mock_session_new.request.side_effect = iter([
             AsyncContext(context=self.make_response(read_fixture('project.json'))),
             AsyncContext(context=self.make_response(read_fixture('translation_en-US.json'))),
             AsyncContext(context=self.make_response(read_fixture('users.json'))),
