@@ -85,6 +85,7 @@ class AsyncTestCase(TestCase):
 
         self.mock_sleep_patch = patch('asyncio.sleep')
         self.mock_sleep = self.mock_sleep_patch.start()
+        self.mock_sleep.return_value = self.make_fut()
 
     def tearDown(self):
         self.loop.close()

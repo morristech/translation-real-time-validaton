@@ -6,6 +6,12 @@ from urllib.parse import urljoin
 logger = logging.getLogger(__name__)
 
 
+class RetryLimit(aiohttp.ClientError):
+    def __init__(self, parent_ex):
+        self.status = getattr(parent_ex, 'status', None)
+        self.message = getattr(parent_ex, 'message', None)
+
+
 class HttpClient(object):
     def __init__(self, host, *args, loop=None, max_wait=0, max_retries=1, **kwargs):
         self._host = host
@@ -58,14 +64,16 @@ class HttpClient(object):
     async def _request_and_retry(self, req_method, *args, max_wait=0, max_retries=1, **kwargs):
         retry_limit = max_retries if max_retries > 1 else int(self._max_retries)
         retry = 0
-        data = None
         while retry < retry_limit:
             retry += 1
             try:
                 data = await req_method(*args, timeout=max_wait, **kwargs)
-            except aiohttp.ClientError:
-                await asyncio.sleep(self._retry_delay ** retry)
-        return data
+                return data
+            except aiohttp.ClientError as ex:
+                if retry + 1 < retry_limit:
+                    await asyncio.sleep(self._retry_delay ** retry)
+                else:
+                    raise RetryLimit(ex) from ex
 
     async def request(self, method, path, *args, max_wait=0, max_retries=1, follow_links=False, **kwargs):
         url = urljoin(self._host, path.lstrip('/'))

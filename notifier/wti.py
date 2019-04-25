@@ -22,7 +22,7 @@ class WtiClient:
 
     def __init__(self, api_key):
         self._api_key = api_key
-        self._client = httpclient.HttpClient(self.host, headers=self.headers)
+        self._client = httpclient.HttpClient(self.host, max_retries=3, headers=self.headers)
 
     async def shutdown(self):
         await self._client.close()
@@ -31,18 +31,20 @@ class WtiClient:
         await self._client.bootstrap()
 
     def _handle_response(self, url, ex):
-        if ex.status == 404:
+        status = getattr(ex, 'status', 0)
+        message = getattr(ex, 'message', '')
+        if status == 404:
             logger.debug('data does not exist for url:%s', url)
             return {}
         else:
-            raise WtiError('unable to connect to wti, status: %s, message:%s' % (ex.status, ex.message))
+            raise WtiError('unable to connect to wti, status: %s, message:%s' % (status, message))
 
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)
         try:
             data = await self._client.get(url)
             return data
-        except aiohttp.ClientResponseError as ex:
+        except aiohttp.ClientError as ex:
             self._handle_response(url, ex)
 
     async def _update_data(self, url, data):
@@ -50,7 +52,7 @@ class WtiClient:
         try:
             await self._client.post(url, data=json.dumps(data))
             return data
-        except aiohttp.ClientResponseError as ex:
+        except aiohttp.ClientError as ex:
             self._handle_response(url, ex)
         return False
 
