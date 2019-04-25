@@ -10,11 +10,13 @@ logger = logging.getLogger(__name__)
 async def stop_http_clients(app):
     await app[const.ZENDESK_DC].shutdown()
     await app[const.SLACK_NOTIFIER].shutdown()
+    await app[const.WTI_DYNAMIC_CONTENT].shutdown()
 
 
 async def start_http_clients(app):
     await app[const.ZENDESK_DC].bootstrap()
     await app[const.SLACK_NOTIFIER].bootstrap()
+    await app[const.WTI_DYNAMIC_CONTENT].bootstrap()
 
 
 def app(global_config, **settings):
