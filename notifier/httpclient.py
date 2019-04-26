@@ -71,7 +71,7 @@ class HttpClient(object):
                 return data
             except aiohttp.ClientError as ex:
                 if retry + 1 < retry_limit:
-                    await asyncio.sleep(self._retry_delay ** retry)
+                    await asyncio.sleep(self._retry_delay * (retry + 1))
                 else:
                     raise RetryLimit(ex) from ex
 
