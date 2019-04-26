@@ -15,6 +15,7 @@ async def stop_http_clients(app):
     await app[const.SLACK_NOTIFIER].shutdown()
     await app[const.WTI_DYNAMIC_CONTENT].shutdown()
     await app[const.TRANSLATE_CLIENT].shutdown()
+    await app[const.VALIDATION_WTI].shutdown()
 
 
 async def start_http_clients(app):
@@ -22,6 +23,7 @@ async def start_http_clients(app):
     await app[const.SLACK_NOTIFIER].bootstrap()
     await app[const.WTI_DYNAMIC_CONTENT].bootstrap()
     await app[const.TRANSLATE_CLIENT].bootstrap()
+    await app[const.VALIDATION_WTI].bootstrap()
 
 
 def app(global_config, **settings):
@@ -37,6 +39,7 @@ def app(global_config, **settings):
     app[const.APP_SETTINGS] = settings
     app[const.EMAIL_PROVIDER] = mailer.SendgridProvider(settings)
     app[const.WTI_DYNAMIC_CONTENT] = wti.WtiClient(settings['wti.api_key'])
+    app[const.VALIDATION_WTI] = wti.WtiClient()
     app[const.ZENDESK_DC] = zendesk.ZendeskDynamicContent(settings)
     app[const.SLACK_NOTIFIER] = notifier.SlackNotifier(settings)
     app[const.TRANSLATE_CLIENT] = translate.GoogleTranslateClient(settings['translate.google_api_key'])

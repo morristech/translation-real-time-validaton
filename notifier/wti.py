@@ -12,15 +12,20 @@ class WtiClient:
     host = 'https://webtranslateit.com/api/projects/'
     headers = {'content-type': 'application/json'}
 
-    def __init__(self, api_key):
-        self._api_key = api_key
-        self._client = httpclient.HttpClient(self.host + self._api_key + '/', max_retries=3, headers=self.headers)
+    def __init__(self, api_key=None):
+        self._api_key = None
+        if api_key:
+            self.set_project_key(api_key)
+        self._client = httpclient.HttpClient(self.host, max_retries=3, headers=self.headers)
 
     async def shutdown(self):
         await self._client.close()
 
     async def bootstrap(self):
         await self._client.bootstrap()
+
+    def set_project_key(self, api_key):
+        self._api_key = api_key
 
     def _handle_response(self, url, ex):
         status = getattr(ex, 'status', 0)
@@ -49,7 +54,7 @@ class WtiClient:
         return False
 
     async def string(self, string_id, locale):
-        url = '/strings/%s/locales/%s/translations.json' % (string_id, locale)
+        url = '/%s/strings/%s/locales/%s/translations.json' % (self._api_key, string_id, locale)
         data = await self._request_data(url)
         if data:
             return WtiString(data['id'], data['locale'], data['text'], WtiTranslationStatus(data['status']))
@@ -57,7 +62,7 @@ class WtiClient:
             return {}
 
     async def create_string(self, dc_item, default_locale):
-        url = '/strings'
+        url = '/%s/strings' % self._api_key
         data = {
             'key': dc_item.key,
             'plural': False,
@@ -72,12 +77,12 @@ class WtiClient:
         await self._update_data(url, data)
 
     async def strings_ids(self):
-        url = '/strings.json'
+        url = '/%s/strings.json' % self._api_key
         data = await self._client.request('GET', url, follow_links=True)
         return {item['key']: item['id'] for item in data}
 
     async def user(self, user_id):
-        url = '/users.json'
+        url = '/%s/users.json' % self._api_key
         users = await self._request_data(url)
         for user in users:
             if user.get('user_id') == user_id:
@@ -86,7 +91,7 @@ class WtiClient:
         return WtiUser(0, None, None)
 
     async def change_status(self, translated_string, status=WtiTranslationStatus.unverified):
-        url = '/strings/%s/locales/%s/translations' % (translated_string.id, translated_string.locale)
+        url = '/%s/strings/%s/locales/%s/translations' % (self._api_key, translated_string.id, translated_string.locale)
         data = {'text': translated_string.text, 'status': status.value, 'minor_change': False}
         res = await self._update_data(url, data)
         return res
@@ -116,7 +121,7 @@ class WtiClient:
                               translated_string.id)
 
     async def update_translation(self, dc_item, locale, validation=True):
-        url = '/strings/%s/locales/%s/translations.json' % (dc_item.wti_id, locale)
+        url = '/%s/strings/%s/locales/%s/translations.json' % (self._api_key, dc_item.wti_id, locale)
         data = {
             'text': dc_item.zendesk_item.text,
             'status': WtiTranslationStatus.proofread.value,
