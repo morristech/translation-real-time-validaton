@@ -3,7 +3,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from aiohttp import web
 
-from . import const, mailer, wti, zendesk, routes, notifier, stats
+from . import const, mailer, wti, zendesk, routes, notifier, stats, translate
 from . import executor
 
 logger = logging.getLogger(__name__)
@@ -13,12 +13,14 @@ async def stop_http_clients(app):
     await app[const.ZENDESK_DC].shutdown()
     await app[const.SLACK_NOTIFIER].shutdown()
     await app[const.WTI_DYNAMIC_CONTENT].shutdown()
+    await app[const.TRANSLATE_CLIENT].shutdown()
 
 
 async def start_http_clients(app):
     await app[const.ZENDESK_DC].bootstrap()
     await app[const.SLACK_NOTIFIER].bootstrap()
     await app[const.WTI_DYNAMIC_CONTENT].bootstrap()
+    await app[const.TRANSLATE_CLIENT].bootstrap()
 
 
 def app(global_config, **settings):
@@ -36,7 +38,8 @@ def app(global_config, **settings):
     app[const.WTI_DYNAMIC_CONTENT] = wti.WtiClient(settings['wti.api_key'])
     app[const.ZENDESK_DC] = zendesk.ZendeskDynamicContent(settings)
     app[const.SLACK_NOTIFIER] = notifier.SlackNotifier(settings)
-    app[const.STATS] = executor.AsyncWrapper(stats.Stats(settings['datadog_api_key']))
+    app[const.TRANSLATE_CLIENT] = translate.GoogleTranslateClient(settings['translate.google_api_key'])
+    app[const.STATS] = executor.AsyncWrapper(stats.Stats(settings['datadog_api_key']), app[const.EXECUTOR_THREAD])
 
     routes.init(app.router)
     app.on_startup.append(start_http_clients)
