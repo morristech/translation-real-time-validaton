@@ -11,3 +11,7 @@ WTI_DYNAMIC_CONTENT = 'srv.wti_dynamic_content'
 ZENDESK_DC = 'srv.zendesk_dynamic_content'
 SLACK_NOTIFIER = 'srv.slack'
 STATS = 'srv.stats'
+
+DEFAULT_WORKER_THREADS = 8
+EXECUTOR_THREAD = 'executor.process'
+TRANSLATE_CLIENT = 'srv.translate'
