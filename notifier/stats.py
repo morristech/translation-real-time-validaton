@@ -11,6 +11,7 @@ class Stats:
         datadog.initialize(api_key=api_key)
         self._handler = datadog.statsd
 
-    async def increment(self, name, *args, **kwargs):
+    def increment(self, name, **tags):
         metric_name = self._prefix % name
-        self._handler.increment(metric_name, *args, **kwargs)
+        tags_fmt = ['%s:%s' % (k, v) for k, v in tags.items()]
+        self._handler.increment(metric_name, tags=tags_fmt)

@@ -42,6 +42,7 @@ async def new_translation(req):
 
     @apiError 400 Missing `wti_key` or `payload`
     """
+    project_name = None
     try:
         data = await req.json()
         logger.info('Payload %s', data)
@@ -75,8 +76,10 @@ async def new_translation(req):
     callback_url = req.query.get(const.REQ_CALLBACK_KEY)
     await asyncio.shield(validator.check_translations(req.app, wti_client, content_type, payload,
                                                       callback_url=callback_url))
-
-    req.app[const.STATS].increment('validation.count')
+    stat_ctx = {
+        'project': project_name
+    }
+    asyncio.ensure_future(req.app[const.STATS].increment('validations', tags=stat_ctx))
     return web.Response()
 
 

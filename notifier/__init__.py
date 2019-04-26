@@ -5,6 +5,7 @@ from aiohttp import web
 
 from . import const, mailer, wti, zendesk, routes, notifier, stats, translate
 from . import executor
+from .middleware import stats_middleware, status_logging_middleware
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +29,11 @@ def app(global_config, **settings):
     loop = asyncio.get_event_loop()
     loop.set_debug(False)
 
-    app = web.Application(logger=logger, loop=loop)
+    app = web.Application(logger=logger, loop=loop, middlewares=[status_logging_middleware, stats_middleware])
     threads = settings.get('worker_threads', const.DEFAULT_WORKER_THREADS)
     app[const.EXECUTOR_THREAD] = ThreadPoolExecutor(max_workers=int(threads))
     loop.set_default_executor(app[const.EXECUTOR_THREAD])
-    
+
     app[const.APP_SETTINGS] = settings
     app[const.EMAIL_PROVIDER] = mailer.SendgridProvider(settings)
     app[const.WTI_DYNAMIC_CONTENT] = wti.WtiClient(settings['wti.api_key'])

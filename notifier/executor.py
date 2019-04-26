@@ -15,7 +15,6 @@ class AsyncWrapper:
             method = self._target_inst.__getattribute__(name)
             return partial(self._async_wrapper, method)
 
-    @asyncio.coroutine
-    def _async_wrapper(self, method_name, *args, **kwargs):
-        boto_call = partial(method_name, *args, **kwargs)
-        return self._loop.run_in_executor(self._executor, boto_call)
+    async def _async_wrapper(self, method_name, *args, **kwargs):
+        coroutine_wrapped = partial(method_name, *args, **kwargs)
+        return self._loop.run_in_executor(self._executor, coroutine_wrapped)
