@@ -4,7 +4,7 @@ import logging
 
 from aiohttp import web
 
-from . import const, wti, validator, sync
+from . import const, validator, sync
 from .model import *
 
 logger = logging.getLogger(__name__)
@@ -36,12 +36,15 @@ async def new_translation(req):
     @apiDescription WTI webhook endpoint. Schedule translation validation task.
     @apiParam {string} project project name, allows to match wti key from app settings
     @apiParam {string} wti_apikey
+    @apiParam {string} machine_translation *OPTIONAL* If set to true it will enable machine translation for all en
+    segments. Default: false
     @apiParam {string} type *OPTIONAL* Default: `md`. Supported: `md`, `ios`, `java`.
     @apiParam {string} callback_url *OPTIONAL* when validation finishes, callback request can be send
     @apiParam (Request JSON) {string} payload WTI payload
 
     @apiError 400 Missing `wti_key` or `payload`
     """
+    project_name = None
     try:
         data = await req.json()
         logger.info('Payload %s', data)
@@ -69,14 +72,19 @@ async def new_translation(req):
         logger.error('payload not in request data')
         return web.HTTPBadRequest(reason='payload not in request data')
 
+    machine_translation = req.query.get(const.REQ_MT_KEY, False)
     payload = data['payload']
     payload = payload if isinstance(payload, list) else [payload]
-    wti_client = wti.WtiClient(wti_key)
+    wti_client = req.app[const.VALIDATION_WTI]
+    wti_client.set_project_key = wti_key
     callback_url = req.query.get(const.REQ_CALLBACK_KEY)
     await asyncio.shield(validator.check_translations(req.app, wti_client, content_type, payload,
                                                       callback_url=callback_url))
-
-    req.app[const.STATS].increment('validation.count')
+    stat_ctx = {
+        'project': project_name,
+        'machine_translation': machine_translation
+    }
+    asyncio.ensure_future(req.app[const.STATS].increment('validations', tags=stat_ctx))
     return web.Response()
 
 

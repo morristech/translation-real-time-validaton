@@ -1,6 +1,7 @@
 import logging
 import aiohttp
 import json
+import asyncio
 
 from . import compare, mailer, const
 from .model import *
@@ -9,26 +10,50 @@ logger = logging.getLogger(__name__)
 UPDATE_PATH = 'admin/refresh_wti'
 
 
-async def check_translations(app, wti_client, content_type, payload, callback_url=None):
+async def machine_translate(wti_client, translate_client, data):
+    wti_translation = data['translation']
+    project = await wti_client.get_project()
+    string_id = wti_translation.get('string_id')
+    logger.info('Auto translating, id: %s, key: %s for project: %s', string_id, wti_translation.get('key'),
+                project.get('name'))
+    text = wti_translation.get('text')
+    if not text:
+        logger.info('Skipping auto translation for empty source text, stringId: %s', string_id)
+    for target_locale in project.get('target_locales'):
+        target_locale_code = target_locale.get('code')
+        translated = translate_client.translate(text, wti_translation.get('locale'), target_locale_code)
+        wti_client.update_translation(string_id, translated.translatedText, target_locale_code, False)
+        logger.debug('Updated translation %s -> %s', target_locale_code, string_id)
+    return
+
+
+async def callback(callback_url, data, is_successful):
+    logger.debug('notifying external service via callback url = %s', callback_url)
+    translation_data = {
+        'payload': data,
+        'validation_successful': is_successful
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(callback_url, data=json.dumps(translation_data)) as resp:
+            try:
+                if resp.status >= 400:
+                    raise aiohttp.ClientResponseError(resp.status)
+            except aiohttp.ClientResponseError:
+                logger.exception('Could not notify external service via callback: %s', callback_url)
+
+
+async def check_translations(app, wti_client, content_type, payload, machine_translation, callback_url=None):
     logger.info('translating %s segments', len(payload))
     for data in payload:
+        if data['translation'].get('locale').lower() == 'en' and machine_translation:
+            await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
+            continue
         if data['translation'].get('status') != WtiTranslationStatus.proofread.value:
             continue
         logger.debug('translating %s', data)
         is_successful = await _check_translation(app, wti_client, content_type, data)
         if callback_url:
-            logger.debug('notifying external service via callback url = %s', callback_url)
-            translation_data = {
-                'payload': data,
-                'validation_successful': is_successful
-            }
-            async with aiohttp.ClientSession() as session:
-                async with session.post(callback_url, data=json.dumps(translation_data)) as resp:
-                    try:
-                        if resp.status >= 400:
-                            raise aiohttp.ClientResponseError(resp.status)
-                    except aiohttp.ClientResponseError:
-                        logger.exception('Could not notify external service via callback: %s', callback_url)
+            asyncio.ensure_future(callback(callback_url, data, is_successful))
 
 
 async def _check_translation(app, wti_client, content_type, translation):
@@ -42,10 +67,10 @@ async def _check_translation(app, wti_client, content_type, translation):
         logger.info('errors found in string %s, project %s', translation['string_id'], translation['project_id'])
         user = await wti_client.user(translation['user_id'])
         await mailer.send(app, user.email, diff)
-        app[const.STATS].increment('validation.failed')
+        asyncio.ensure_future(app[const.STATS].increment('validations.failed'))
         if user.role != WtiUserRoles.manager:
             await wti_client.change_status(translated_string)
         return False
     else:
-        app[const.STATS].increment('validation.success')
+        asyncio.ensure_future(app[const.STATS].increment('validations.succeeded'))
         return True

@@ -3,6 +3,8 @@ import os
 import simplejson as json
 from unittest import TestCase
 from unittest.mock import MagicMock, patch, Mock
+import functools
+import aiohttp
 
 from notifier import const
 
@@ -51,6 +53,11 @@ class AsyncContext(Mock):
         pass
 
 
+def raise_for_status(status, message, ex):
+    if status >= 400:
+        raise ex(None, None, status=status, message=message)
+
+
 class AsyncTestCase(TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -78,10 +85,10 @@ class AsyncTestCase(TestCase):
 
         self.mock_sleep_patch = patch('asyncio.sleep')
         self.mock_sleep = self.mock_sleep_patch.start()
+        self.mock_sleep.return_value = self.make_fut()
 
     def tearDown(self):
         self.loop.close()
-        self.mock_request_patch.stop()
         self.mock_session_patch.stop()
         self.mock_wait_patch.stop()
         self.mock_sleep_patch.stop()
@@ -101,7 +108,7 @@ class AsyncTestCase(TestCase):
         resp = self.make_response(body, status, headers)
         return self.make_fut(resp)
 
-    def make_response(self, body='', status=200, headers=None):
+    def make_response(self, body='', status=200, headers=None, ex=aiohttp.ClientResponseError):
         res = MagicMock()
         res.status = status
         res.headers = {
@@ -111,6 +118,7 @@ class AsyncTestCase(TestCase):
         res.read.return_value = self.make_fut(body.encode('utf-8'))
         res.json.return_value = self.make_fut(json.loads(body or '{}'))
         res.release.return_value = self.make_fut()
+        res.raise_for_status = functools.partial(raise_for_status, status, body, ex)
         return res
 
     def make_res_json(self, body={}, status=200):

@@ -10,6 +10,13 @@ DynamicContentItem = namedtuple('DynamicContentItem', ['key', 'wti_id', 'zendesk
 
 DiffError = namedtuple('DiffError', ['url_errors', 'md_error', 'section_link'])
 
+GoogleTranslation = namedtuple('GoogleTranslation', [
+    'translatedText',
+    'model',
+    'detectedSourceLanguage',
+])
+GoogleTranslation.__new__.__defaults__ = (None,)
+
 
 class WtiUserRoles(Enum):
     translator = 'translator'
