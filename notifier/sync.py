@@ -29,9 +29,10 @@ def _default_translation(translations, default_locale):
 async def _update_item(zendesk_dc, wti_client, zendesk_locales, dc_item):
     res = False
     translations = await _get_all_translations(zendesk_dc, wti_client, dc_item, zendesk_locales)
-    if compare.is_different(_default_translation(translations, zendesk_dc.default_locale), dc_item.zendesk_item.text):
+    text = dc_item.zendesk_item.text
+    if compare.is_different(_default_translation(translations, zendesk_dc.default_locale), text):
         logger.info('updating wti item with key:%s', dc_item.key)
-        await wti_client.update_translation(dc_item, zendesk_dc.default_locale, translations)
+        await wti_client.update_translation(dc_item.wti_id, text, zendesk_dc.default_locale, translations)
         res = True
     else:
         logger.debug('item with key %s did not change', dc_item.key)

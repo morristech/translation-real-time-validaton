@@ -124,10 +124,10 @@ class WtiClient:
         return section_url % (project.id, project.name, project.master_locale, translated_string.locale,
                               translated_string.id)
 
-    async def update_translation(self, dc_item, locale, validation=True):
-        url = '/%s/strings/%s/locales/%s/translations.json' % (self._api_key, dc_item.wti_id, locale)
+    async def update_translation(self, string_id, text, locale, validation=True):
+        url = '/%s/strings/%s/locales/%s/translations.json' % (self._api_key, string_id, locale)
         data = {
-            'text': dc_item.zendesk_item.text,
+            'text': text,
             'status': WtiTranslationStatus.proofread.value,
             'minor_change': False,
             'validation': validation
