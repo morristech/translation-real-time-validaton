@@ -27,7 +27,7 @@ class TestValidator(AsyncTestCase):
             AsyncContext(context=self.make_response(read_fixture('users.json'))),
         ])
 
-        self.coro(validator.check_translations(self.app, client, WtiContentTypes.md, payload))
+        self.coro(validator.check_translations(self.app, client, WtiContentTypes.md, payload, False))
 
     def test_check_translations_callback(self):
         payload = [read_fixture('payload.json', decoder=json.loads)]
@@ -39,5 +39,5 @@ class TestValidator(AsyncTestCase):
             AsyncContext(context=self.make_response(read_fixture('translation_en-US.json'))),
             AsyncContext(context=self.make_response(read_fixture('users.json'))),
         ])
-        self.coro(validator.check_translations(self.app, client, WtiContentTypes.md, payload, 'callback-url'))
+        self.coro(validator.check_translations(self.app, client, WtiContentTypes.md, payload, False, 'callback-url'))
         self.mock_session_new.post.assert_called_once()
