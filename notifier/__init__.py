@@ -43,7 +43,8 @@ def app(global_config, **settings):
     app[const.ZENDESK_DC] = zendesk.ZendeskDynamicContent(settings)
     app[const.SLACK_NOTIFIER] = notifier.SlackNotifier(settings)
     app[const.TRANSLATE_CLIENT] = translate.GoogleTranslateClient(settings['translate.google_api_key'])
-    app[const.STATS] = executor.AsyncWrapper(stats.Stats(settings['datadog_api_key']), app[const.EXECUTOR_THREAD])
+    dd_stats = stats.Stats(settings['datadog_api_key'], settings['datadog_app_key'])
+    app[const.STATS] = executor.AsyncWrapper(dd_stats, app[const.EXECUTOR_THREAD])
 
     routes.init(app.router)
     app.on_startup.append(start_http_clients)

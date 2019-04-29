@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 class Stats:
     _prefix = 'keepsafe.translations.%s'
 
-    def __init__(self, api_key):
-        datadog.initialize(api_key=api_key)
+    def __init__(self, api_key, app_key):
+        datadog.initialize(api_key=api_key, app_key=app_key)
         self._handler = datadog.statsd
 
     def increment(self, name, **tags):
