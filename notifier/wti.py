@@ -103,6 +103,10 @@ class WtiClient:
         logger.error('No file could be found for id {} in project files {}'.format(file_id, files))
         return ''
 
+    async def get_project(self):
+        data = await self._request_data('')
+        return data
+
     async def project(self, file_id, content_type):
         data = await self._request_data('')
         try:
