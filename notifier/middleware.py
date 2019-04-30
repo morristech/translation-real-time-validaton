@@ -27,7 +27,7 @@ def send_stats(res, req):
         'status': status,
         'path': path
     }
-    asyncio.ensure_future(stats_client.increment('requests', tags=tags))
+    asyncio.ensure_future(stats_client.increment('requests', **tags))
 
 
 @web.middleware

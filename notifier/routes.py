@@ -84,7 +84,7 @@ async def new_translation(req):
         'project': project_name,
         'machine_translation': machine_translation
     }
-    asyncio.ensure_future(req.app[const.STATS].increment('validations', tags=stat_ctx))
+    asyncio.ensure_future(req.app[const.STATS].increment('validations', **stat_ctx))
     return web.Response()
 
 
