@@ -18,7 +18,7 @@ class HttpClient(object):
         self._loop = loop or asyncio.get_event_loop()
         self._max_wait = max_wait
         self._max_retries = max_retries
-        self._retry_delay = 1000
+        self._retry_delay = 3
         self._max_follow_links = 10
         self._session = aiohttp.ClientSession(*args, loop=self._loop, **kwargs)
 
