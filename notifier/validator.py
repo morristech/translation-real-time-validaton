@@ -13,9 +13,8 @@ UPDATE_PATH = 'admin/refresh_wti'
 async def machine_translate(wti_client, translate_client, data):
     wti_translation = data['translation']
     project = await wti_client.get_project()
-    string_id = wti_translation.get('string_id')
-    logger.info('Auto translating, id: %s, key: %s for project: %s', string_id, wti_translation.get('key'),
-                project.get('name'))
+    string_id = wti_translation.get('string').get('id')
+    logger.info('Auto translating, stringId: %s, for project: %s', string_id, project.get('name'))
     text = wti_translation.get('text')
     if not text:
         logger.info('Skipping auto translation for empty source text, stringId: %s', string_id)
@@ -25,7 +24,7 @@ async def machine_translate(wti_client, translate_client, data):
         target_locale_code = target_locale.get('code')
         translated = await translate_client.translate(text, wti_translation.get('locale'), target_locale_code)
         await wti_client.update_translation(string_id, translated.translatedText, target_locale_code, False)
-        logger.debug('Updated translation %s -> %s', target_locale_code, string_id)
+        logger.info('Updated translation %s -> %s', target_locale_code, string_id)
     return
 
 
