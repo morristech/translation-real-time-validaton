@@ -78,8 +78,8 @@ async def new_translation(req):
     wti_client = req.app[const.VALIDATION_WTI]
     wti_client.set_project_key = wti_key
     callback_url = req.query.get(const.REQ_CALLBACK_KEY)
-    await asyncio.shield(validator.check_translations(req.app, wti_client, content_type, payload, machine_translation,
-                                                      callback_url=callback_url))
+    await validator.check_translations(req.app, wti_client, content_type, payload, machine_translation,
+                                       callback_url=callback_url)
     stat_ctx = {
         'project': project_name,
         'machine_translation': machine_translation
