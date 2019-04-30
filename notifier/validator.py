@@ -19,10 +19,12 @@ async def machine_translate(wti_client, translate_client, data):
     text = wti_translation.get('text')
     if not text:
         logger.info('Skipping auto translation for empty source text, stringId: %s', string_id)
-    for target_locale in project.get('target_locales'):
+    source_locale_code = project.get('source_locale').get('code')
+    target_locales = filter(lambda locale: locale.get('code') != source_locale_code, project.get('target_locales', []))
+    for target_locale in target_locales:
         target_locale_code = target_locale.get('code')
-        translated = translate_client.translate(text, wti_translation.get('locale'), target_locale_code)
-        wti_client.update_translation(string_id, translated.translatedText, target_locale_code, False)
+        translated = await translate_client.translate(text, wti_translation.get('locale'), target_locale_code)
+        await wti_client.update_translation(string_id, translated.translatedText, target_locale_code, False)
         logger.debug('Updated translation %s -> %s', target_locale_code, string_id)
     return
 
