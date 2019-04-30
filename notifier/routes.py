@@ -4,7 +4,7 @@ import logging
 
 from aiohttp import web
 
-from . import const, validator, sync
+from . import const, validator, sync, wti
 from .model import *
 
 logger = logging.getLogger(__name__)
@@ -75,8 +75,8 @@ async def new_translation(req):
     machine_translation = req.query.get(const.REQ_MT_KEY, False)
     payload = data['payload']
     payload = payload if isinstance(payload, list) else [payload]
-    wti_client = req.app[const.VALIDATION_WTI]
-    wti_client.set_project_key(wti_key)
+    wti_client = wti.WtiClient(wti_key)
+    await wti_client.bootstrap()
     callback_url = req.query.get(const.REQ_CALLBACK_KEY)
     await validator.check_translations(req.app, wti_client, content_type, payload, machine_translation,
                                        callback_url=callback_url)
@@ -85,6 +85,7 @@ async def new_translation(req):
         'machine_translation': machine_translation
     }
     asyncio.ensure_future(req.app[const.STATS].increment('validations', **stat_ctx))
+    await wti_client.shutdown()
     return web.Response()
 
 
