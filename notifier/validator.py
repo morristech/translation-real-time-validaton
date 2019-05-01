@@ -29,6 +29,7 @@ def mask_markdown_urls(text):
 
 def unmask_markdown(masked_text, masked):
     regex = r"\((K33P)\)"
+    masked = masked.copy()
     masked.reverse()
 
     def replace(match):
