@@ -6,6 +6,8 @@ from notifier import const, validator, wti, stats, translate
 
 
 class TestValidator(AsyncTestCase):
+    maxDiff = None
+
     def setUp(self):
         super().setUp()
         self.app = self.make_app()
@@ -29,3 +31,13 @@ class TestValidator(AsyncTestCase):
         ])
 
         self.coro(validator.machine_translate(wti_client, trans_client, payload))
+
+    def test_url_masking(self):
+        md = read_fixture('markdown.md')
+        masked, masked_text = validator.mask_markdown_urls(md)
+        url = 'https://accounts.getkeepsafe.com/redirect/acode/{{code}}/{{bundle}}?locale={link_locale}'
+        url2 = 'https://accounts.getkeepsafe.com/redirect/acode/{{code}}/{{bundle}}?locale={link_locale2}'
+        self.assertEqual(masked[0], url)
+        self.assertEqual(masked[1], url2)
+        unmasked_text = validator.unmask_markdown(masked_text, masked)
+        self.assertEqual(md, unmasked_text)
