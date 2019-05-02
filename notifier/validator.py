@@ -2,7 +2,8 @@ import logging
 import aiohttp
 import json
 import asyncio
-import re
+import markdown
+import html2text
 
 from . import compare, mailer, const
 from .model import *
@@ -11,36 +12,9 @@ logger = logging.getLogger(__name__)
 UPDATE_PATH = 'admin/refresh_wti'
 
 
-def mask_markdown_urls(text):
-    placeholder = 'K33P'
-    regex = r"\((http?.*)\)"
-    mask = []
-
-    def replace(match):
-        mask.append(text[match.span(1)[0]:match.span(1)[1]])
-        return '(%s)' % placeholder
-
-    try:
-        masked_text = re.sub(regex, replace, text)
-        return mask, masked_text
-    except TypeError:
-        logger.exception('text = %s', text)
-
-
-def unmask_markdown(masked_text, masked):
-    regex = r"\((K33P)\)"
-    masked = masked.copy()
-    masked.reverse()
-
-    def replace(match):
-        return '(%s)' % masked.pop()
-
-    unmasked_text = re.sub(regex, replace, masked_text)
-
-    return unmasked_text
-
-
 async def machine_translate(wti_client, translate_client, data):
+    html2text_conv = html2text.HTML2Text()
+    html2text_conv.body_width = 0
     wti_translation = data['translation']
     project = await wti_client.get_project()
     string_id = wti_translation.get('string').get('id')
@@ -50,12 +24,13 @@ async def machine_translate(wti_client, translate_client, data):
         logger.info('Skipping auto translation for empty source text, stringId: %s', string_id)
     source_locale_code = project.get('source_locale').get('code')
     target_locales = filter(lambda locale: locale.get('code') != source_locale_code, project.get('target_locales', []))
-    masked, masked_text = mask_markdown_urls(text)
+    html_text = markdown.markdown(text)
     for target_locale in target_locales:
         target_locale_code = target_locale.get('code')
-        translated = await translate_client.translate(masked_text, wti_translation.get('locale'), target_locale_code)
-        unmasked_translated = unmask_markdown(translated.translatedText, masked)
-        await wti_client.update_translation(string_id, unmasked_translated, target_locale_code, False)
+        translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
+                                                      'html')
+        translated_md = html2text_conv.handle(translated.translatedText)
+        await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
         logger.info('Updated translation %s -> %s', target_locale_code, string_id)
     return
 

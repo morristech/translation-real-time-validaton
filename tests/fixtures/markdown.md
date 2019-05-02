@@ -7,4 +7,12 @@ Use the button or code below to login to your Keepsafe account.
 
 Didn’t request an access code? Then you can ignore this email.
 
-Your Friends, <br/>**The Keepsafe Team**
+## This is a nice list
+
+1. Creation of the world
+1. Source of dharma
+1. The dharma of the four social classes
+1. Law of karma, rebirth and final liberation
+
+Your Friends,  
+**The Keepsafe Team**

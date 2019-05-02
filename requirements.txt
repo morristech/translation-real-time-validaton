@@ -12,3 +12,5 @@ simplejson==3.8.2
 pybars3==0.9.1
 raven==5.26.0
 datadog==0.14.0
+Markdown==2.6.11
+html2text==2014.12.29

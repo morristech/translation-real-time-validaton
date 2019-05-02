@@ -2,7 +2,8 @@ import json
 from unittest.mock import MagicMock
 
 from . import AsyncTestCase, read_fixture, AsyncContext
-from notifier import const, validator, wti, stats, translate
+from notifier import const, validator, wti, stats, translate, model
+import validator as content_validator
 
 
 class TestValidator(AsyncTestCase):
@@ -32,12 +33,22 @@ class TestValidator(AsyncTestCase):
 
         self.coro(validator.machine_translate(wti_client, trans_client, payload))
 
-    def test_url_masking(self):
-        md = read_fixture('markdown.md')
-        masked, masked_text = validator.mask_markdown_urls(md)
-        url = 'https://accounts.getkeepsafe.com/redirect/acode/{{code}}/{{bundle}}?locale={link_locale}'
-        url2 = 'https://accounts.getkeepsafe.com/redirect/acode/{{code}}/{{bundle}}?locale={link_locale2}'
-        self.assertEqual(masked[0], url)
-        self.assertEqual(masked[1], url2)
-        unmasked_text = validator.unmask_markdown(masked_text, masked)
-        self.assertEqual(md, unmasked_text)
+    def test_markdown_translation(self):
+        """
+        for documenting purposes
+        """
+        payload = read_fixture('payload.json', decoder=json.loads)
+        origin_markdown = read_fixture('markdown.md')
+        wti_client = MagicMock(spec=wti.WtiClient)
+        wti_client.get_project.return_value = self.make_fut(read_fixture('project.json', decoder=json.loads)['project'])
+        wti_client.update_translation.return_value = self.make_fut()
+        trans_client = MagicMock(spec=translate.GoogleTranslateClient)
+        google_resp = read_fixture('translated_markdown.json', decoder=json.loads)
+        translation = model.GoogleTranslation(google_resp['data']['translations'][0]['translatedText'], 'g')
+        trans_client.translate.return_value = self.make_fut(translation)
+        self.coro(validator.machine_translate(wti_client, trans_client, payload))
+        translated_md = wti_client.update_translation.call_args[0][1]
+        diff = content_validator.parse().text(origin_markdown, translated_md).html().check().md().validate()
+        if len(diff):
+            msg = '%s\nbase: %s,\nother: %s' % (diff[0].error_msgs, diff[0].base.diff, diff[0].other.diff)
+            self.assertEqual(diff, [], msg)
