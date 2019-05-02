@@ -1,0 +1,10 @@
+{
+    "data": {
+        "translations": [
+            {
+                "translatedText": "<h1> Herzlich willkommen! </h1><p> Verwenden Sie die Schaltfl\u00e4che oder den Code, um sich bei Ihrem Keepsafe-Konto anzumelden. </p><h5> <a href=\"https://accounts.getkeepsafe.com/redirect/acode/{{code}}/{{bundle}}?locale={link_locale}\">Melden Sie sich bei Keepsafe an</a> </h5><h4> oder geben Sie den Code ein: </h4><h3> <a href=\"https://accounts.getkeepsafe.com/redirect/acode/{{code}}/{{bundle}}?locale={link_locale2}\">{{Code}}</a> </h3><p> Kein Zugangscode beantragt? Dann k\u00f6nnen Sie diese E-Mail ignorieren. </p><h2> Dies ist eine sch\u00f6ne Liste </h2><ol><li> Sch\u00f6pfung der Welt </li><li> Quelle des Dharma </li><li> Das Dharma der vier sozialen Klassen </li><li> Gesetz des Karmas, Wiedergeburt und endg\u00fcltige Befreiung </li></ol><p> Deine Freunde, <br/> <strong>Das Keepsafe-Team</strong> </p>",
+                "model": "nmt"
+            }
+        ]
+    }
+}

@@ -2,6 +2,8 @@ import logging
 import aiohttp
 import json
 import asyncio
+import markdown
+import html2text
 
 from . import compare, mailer, const
 from .model import *
@@ -11,19 +13,25 @@ UPDATE_PATH = 'admin/refresh_wti'
 
 
 async def machine_translate(wti_client, translate_client, data):
+    html2text_conv = html2text.HTML2Text()
+    html2text_conv.body_width = 0
     wti_translation = data['translation']
     project = await wti_client.get_project()
-    string_id = wti_translation.get('string_id')
-    logger.info('Auto translating, id: %s, key: %s for project: %s', string_id, wti_translation.get('key'),
-                project.get('name'))
+    string_id = wti_translation.get('string').get('id')
+    logger.info('Auto translating, stringId: %s, for project: %s', string_id, project.get('name'))
     text = wti_translation.get('text')
     if not text:
         logger.info('Skipping auto translation for empty source text, stringId: %s', string_id)
-    for target_locale in project.get('target_locales'):
+    source_locale_code = project.get('source_locale').get('code')
+    target_locales = filter(lambda locale: locale.get('code') != source_locale_code, project.get('target_locales', []))
+    html_text = markdown.markdown(text)
+    for target_locale in target_locales:
         target_locale_code = target_locale.get('code')
-        translated = translate_client.translate(text, wti_translation.get('locale'), target_locale_code)
-        wti_client.update_translation(string_id, translated.translatedText, target_locale_code, False)
-        logger.debug('Updated translation %s -> %s', target_locale_code, string_id)
+        translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
+                                                      'html')
+        translated_md = html2text_conv.handle(translated.translatedText)
+        await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
+        logger.info('Updated translation %s -> %s', target_locale_code, string_id)
     return
 
 
@@ -46,7 +54,9 @@ async def check_translations(app, wti_client, content_type, payload, machine_tra
     logger.info('translating %s segments', len(payload))
     for data in payload:
         if data['translation'].get('locale').lower() == 'en' and machine_translation:
+            asyncio.ensure_future(app[const.STATS].increment('translations'))
             await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
+            asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
             continue
         if data['translation'].get('status') != WtiTranslationStatus.proofread.value:
             continue
@@ -66,7 +76,11 @@ async def _check_translation(app, wti_client, content_type, translation):
     if diff and (diff.url_errors or diff.md_error):
         logger.info('errors found in string %s, project %s', translation['string_id'], translation['project_id'])
         user = await wti_client.user(translation['user_id'])
-        await mailer.send(app, user.email, diff)
+        if user.email is None:
+            email = app[const.APP_SETTINGS].get('email.admin')
+        else:
+            email = user.email
+        await mailer.send(app, email, diff)
         asyncio.ensure_future(app[const.STATS].increment('validations.failed'))
         if user.role != WtiUserRoles.manager:
             await wti_client.change_status(translated_string)

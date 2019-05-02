@@ -104,11 +104,15 @@ class WtiClient:
         return ''
 
     async def get_project(self):
-        data = await self._request_data('')
-        return data
+        data = await self._request_data(self._api_key + '.json')
+        try:
+            project_data = data['project']
+            return project_data
+        except Exception:
+            logger.exception('Unexpected response from WTI %s', data)
 
     async def project(self, file_id, content_type):
-        data = await self._request_data('')
+        data = await self._request_data(self._api_key + '.json')
         try:
             project_data = data['project']
             master_locale = project_data['source_locale']['code']
