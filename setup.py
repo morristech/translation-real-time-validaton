@@ -13,7 +13,9 @@ reqs = [
     'simplejson',
     'pybars3 >= 0.9.1',
     'inlinestyler >= 0.2.0',
-    'datadog >= 0.14'
+    'datadog >= 0.14',
+    'Markdown==2.6.11',
+    'html2text==2014.12.29'
 ]
 
 setup(name='ks-translation-notifier',
