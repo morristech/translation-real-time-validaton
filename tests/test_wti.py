@@ -15,6 +15,12 @@ class TestTranslate(AsyncTestCase):
         with self.assertRaises(WtiError):
             self.coro(self.client.string('dummy_id', 'dummy_locale'))
 
+    def test_connection_error_retry(self):
+        self.mock_session_new.request.return_value = AsyncContext(context=self.make_response(status=400))
+        with self.assertRaises(WtiError):
+            self.coro(self.client.string('dummy_id', 'dummy_locale'))
+        self.mock_session_new.request.assert_called_once()
+
     def test_string(self):
         expected = WtiString(22683983, 'pl', '#bbb\n\nbbb', WtiTranslationStatus.unproofread)
         fixture = read_fixture('translation_pl.json')
