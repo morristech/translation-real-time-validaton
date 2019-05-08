@@ -34,7 +34,7 @@ class WtiClient:
             logger.debug('data does not exist for url:%s', url)
             return {}
         else:
-            raise WtiError('unable to connect to wti, status: %s, message:%s' % (status, message))
+            raise WtiError(status, message)
 
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)
