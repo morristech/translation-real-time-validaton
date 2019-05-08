@@ -55,8 +55,11 @@ async def check_translations(app, wti_client, content_type, payload, machine_tra
     for data in payload:
         if data['translation'].get('locale').lower() == 'en' and machine_translation:
             asyncio.ensure_future(app[const.STATS].increment('translations'))
-            await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
-            asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
+            try:
+                await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
+                asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
+            except Exception:
+                logger.exception('Failed to auto translate: %s', data)
             continue
         if data['translation'].get('status') != WtiTranslationStatus.proofread.value:
             continue
