@@ -100,7 +100,7 @@ class WtiClient:
         for file in files:
             if file['id'] == file_id:
                 return file['name']
-        logger.error('No file could be found for id {} in project files {}'.format(file_id, files))
+        logger.warning('No file could be found for id {} in project files {}'.format(file_id, files))
         return ''
 
     async def get_project(self):
