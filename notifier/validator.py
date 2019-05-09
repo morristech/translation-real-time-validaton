@@ -39,7 +39,7 @@ async def machine_translate(wti_client, translate_client, data):
                 'string_id': string_id,
                 'target_locale': target_locale_code
             }
-            logger.error('Could not update translation', extra=sentry_tags)
+            logger.exception('Could not update translation', extra=sentry_tags)
     return
 
 
@@ -62,8 +62,9 @@ async def check_translations(app, wti_client, content_type, payload, machine_tra
     logger.info('translating %s segments', len(payload))
     for data in payload:
         locale_major = data['translation'].get('locale').lower()[0:2]
-        logger.info('Major locale: %s, machine translation enabled: %s', locale_major, machine_translation)
-        if locale_major == 'en' and machine_translation:
+        should_machine_translate = locale_major == 'en' and machine_translation
+        logger.info('Major locale: %s, machine translation enabled: %s', locale_major, should_machine_translate)
+        if should_machine_translate:
             asyncio.ensure_future(app[const.STATS].increment('translations'))
             try:
                 await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
