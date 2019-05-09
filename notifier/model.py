@@ -39,4 +39,9 @@ class WtiContentTypes(Enum):
 
 
 class WtiError(Exception):
-    pass
+    def __init__(self, status, message):
+        self.status = status
+        self.message = message
+
+    def __repr__(self):
+        return 'unable to connect to wti, status: %s, message:%s' % (self.status, self.message)

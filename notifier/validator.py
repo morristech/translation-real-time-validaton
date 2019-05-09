@@ -27,11 +27,19 @@ async def machine_translate(wti_client, translate_client, data):
     html_text = markdown.markdown(text)
     for target_locale in target_locales:
         target_locale_code = target_locale.get('code')
-        translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
-                                                      'html')
-        translated_md = html2text_conv.handle(translated.translatedText)
-        await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
-        logger.info('Updated translation %s -> %s', target_locale_code, string_id)
+        try:
+            translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
+                                                          'html')
+            translated_md = html2text_conv.handle(translated.translatedText)
+            await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
+            logger.info('Updated translation %s -> %s', target_locale_code, string_id)
+        except Exception:
+            sentry_tags = {
+                'project': project.get('name'),
+                'string_id': string_id,
+                'target_locale': target_locale_code
+            }
+            logger.error('Could not update translation', extra=sentry_tags)
     return
 
 
@@ -55,15 +63,27 @@ async def check_translations(app, wti_client, content_type, payload, machine_tra
     for data in payload:
         if data['translation'].get('locale').lower() == 'en' and machine_translation:
             asyncio.ensure_future(app[const.STATS].increment('translations'))
-            await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
-            asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
+            try:
+                await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
+                asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
+            except Exception:
+                logger.exception('Failed to auto translate: %s', data)
             continue
         if data['translation'].get('status') != WtiTranslationStatus.proofread.value:
             continue
-        logger.debug('translating %s', data)
-        is_successful = await _check_translation(app, wti_client, content_type, data)
-        if callback_url:
-            asyncio.ensure_future(callback(callback_url, data, is_successful))
+        logger.debug('validating %s', data)
+        try:
+            is_successful = await _check_translation(app, wti_client, content_type, data)
+            if callback_url:
+                asyncio.ensure_future(callback(callback_url, data, is_successful))
+        except Exception:
+            project = await wti_client.get_project()
+            sentry_tags = {
+                'project': project.get('name'),
+                'content_type': content_type,
+                'string_id': data['translation'].get('string').get('id'),
+            }
+            logger.exception('Could not validate translation', extra=sentry_tags)
 
 
 async def _check_translation(app, wti_client, content_type, translation):
@@ -80,6 +100,7 @@ async def _check_translation(app, wti_client, content_type, translation):
             email = app[const.APP_SETTINGS].get('email.admin')
         else:
             email = user.email
+        logger.info('Sending validation info to: %s', email)
         await mailer.send(app, email, diff)
         asyncio.ensure_future(app[const.STATS].increment('validations.failed'))
         if user.role != WtiUserRoles.manager:

@@ -34,7 +34,7 @@ class WtiClient:
             logger.debug('data does not exist for url:%s', url)
             return {}
         else:
-            raise WtiError('unable to connect to wti, status: %s, message:%s' % (status, message))
+            raise WtiError(status, message)
 
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)
@@ -92,7 +92,7 @@ class WtiClient:
 
     async def change_status(self, translated_string, status=WtiTranslationStatus.unverified):
         url = '/%s/strings/%s/locales/%s/translations' % (self._api_key, translated_string.id, translated_string.locale)
-        data = {'text': translated_string.text, 'status': status.value, 'minor_change': False}
+        data = {'text': translated_string.text, 'status': status.value, 'minor_change': False, 'validation': False}
         res = await self._update_data(url, data)
         return res
 
@@ -100,7 +100,7 @@ class WtiClient:
         for file in files:
             if file['id'] == file_id:
                 return file['name']
-        logger.error('No file could be found for id {} in project files {}'.format(file_id, files))
+        logger.warning('No file could be found for id {} in project files {}'.format(file_id, files))
         return ''
 
     async def get_project(self):
