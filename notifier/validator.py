@@ -71,10 +71,19 @@ async def check_translations(app, wti_client, content_type, payload, machine_tra
             continue
         if data['translation'].get('status') != WtiTranslationStatus.proofread.value:
             continue
-        logger.debug('translating %s', data)
-        is_successful = await _check_translation(app, wti_client, content_type, data)
-        if callback_url:
-            asyncio.ensure_future(callback(callback_url, data, is_successful))
+        logger.debug('validating %s', data)
+        try:
+            is_successful = await _check_translation(app, wti_client, content_type, data)
+            if callback_url:
+                asyncio.ensure_future(callback(callback_url, data, is_successful))
+        except Exception:
+            project = await wti_client.get_project()
+            sentry_tags = {
+                'project': project.get('name'),
+                'content_type': content_type,
+                'string_id': data['translation'].get('string').get('id'),
+            }
+            logger.exception('Could not validate translation', extra=sentry_tags)
 
 
 async def _check_translation(app, wti_client, content_type, translation):
