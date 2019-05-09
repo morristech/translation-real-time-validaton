@@ -8,26 +8,8 @@ from .model import *
 logger = logging.getLogger(__name__)
 
 
-class TranslationError(aiohttp.ClientError):
-    def __init__(self, parent_ex, req_params):
-        self.status = getattr(parent_ex, 'status', None)
-        self.message = getattr(parent_ex, 'message', None)
-        self.req_params = req_params
-
-    def __repr__(self):
-        return 'Translator failed, status: %s, message: %s, params: %s' % (self.status, self.message, self.req_params)
-
-
-class UnknownResponse(Exception):
-    def __init__(self, resp_data):
-        self.resp_data = resp_data
-
-    def __repr__(self):
-        return 'Unknown response format: %s' % self.resp_data
-
-
 class GoogleTranslateClient:
-    HOST = 'https://translation.googleapis.com/language/translate/v2'
+    HOST = 'https://translation.googleapis.com/language/translate/v2/'
 
     def __init__(self, api_key, model='nmt'):
         self._api_key = api_key
@@ -47,7 +29,7 @@ class GoogleTranslateClient:
         google_locale = filter(lambda l: l.language.lower() == locale.lower(), self._languages)
         try:
             google_locale = list(google_locale)[0]
-            return google_locale
+            return google_locale.language
         except IndexError:
             # try fuzzy match en-* == en
             if len(locale) > 2:
@@ -68,7 +50,7 @@ class GoogleTranslateClient:
             'key': self._api_key
         }
         try:
-            resp = await self._client.post('', data=params)
+            resp = await self._client.post('', params=params)
         except aiohttp.ClientResponseError as ex:
             raise TranslationError(ex, params)
         try:
@@ -83,6 +65,12 @@ class GoogleTranslateClient:
             'model': self._model,
             'key': self._api_key
         }
-        resp = await self._client.get('', data=params)
-        languages = resp['data']['languages']
+        try:
+            resp = await self._client.get('/languages', params=params)
+        except aiohttp.ClientResponseError as ex:
+            raise TranslationError(ex, params)
+        try:
+            languages = resp['data']['languages']
+        except KeyError:
+            raise UnknownResponse(resp)
         return (GoogleLanguage(**language) for language in languages)

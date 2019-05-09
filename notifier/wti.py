@@ -29,12 +29,11 @@ class WtiClient:
 
     def _handle_response(self, url, ex):
         status = getattr(ex, 'status', 0)
-        message = getattr(ex, 'message', '')
         if status == 404:
             logger.debug('data does not exist for url:%s', url)
             return {}
         else:
-            raise WtiError(status, message)
+            raise WtiError(ex)
 
     async def _request_data(self, url):
         logger.debug('getting wti data url:%s', url)

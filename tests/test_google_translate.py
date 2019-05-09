@@ -24,6 +24,6 @@ class TestGoogleTranslate(AsyncTestCase):
     def test_translate_fallback_to_major_locale(self):
         fixture = read_fixture('google_translate.json')
         self.mock_session_new.request.return_value = AsyncContext(context=self.make_response(body=fixture))
-        url = 'https://translation.googleapis.com/language/translate/v2'
+        url = 'https://translation.googleapis.com/language/translate/v2/languages'
         data = {'target': 'en', 'model': 'nmt', 'key': 'API_KEY'}
-        self.mock_session_new.request.assert_called_with('GET', url, data=data, timeout=0)
+        self.mock_session_new.request.assert_called_with('GET', url, params=data, timeout=0)

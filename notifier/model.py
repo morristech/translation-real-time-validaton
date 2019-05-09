@@ -45,9 +45,30 @@ class WtiContentTypes(Enum):
 
 
 class WtiError(Exception):
-    def __init__(self, status, message):
-        self.status = status
-        self.message = message
+    def __init__(self, parent_ex):
+        self.request_info = getattr(parent_ex, 'request_info', None)
+        self.status = getattr(parent_ex, 'status', None)
+        self.message = getattr(parent_ex, 'message', None)
+
+    def __str__(self):
+        return 'WTI API error, status: %s, message:%s, request: %s' % (self.status, self.message, self.request_info)
+
+
+class TranslationError(Exception):
+    def __init__(self, parent_ex, req_params):
+        self.request_info = getattr(parent_ex, 'request_info', None)
+        self.status = getattr(parent_ex, 'status', None)
+        self.message = getattr(parent_ex, 'message', None)
+        self.req_params = req_params
+
+    def __str__(self):
+        return 'Translator failed, status: %s, message: %s, request: %s' % (self.status, self.message,
+                                                                            self.request_info)
+
+
+class UnknownResponse(Exception):
+    def __init__(self, resp_data):
+        self.resp_data = resp_data
 
     def __repr__(self):
-        return 'unable to connect to wti, status: %s, message:%s' % (self.status, self.message)
+        return 'Unknown response format: %s' % self.resp_data

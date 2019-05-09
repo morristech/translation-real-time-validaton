@@ -27,19 +27,23 @@ async def machine_translate(wti_client, translate_client, data):
     html_text = markdown.markdown(text)
     for target_locale in target_locales:
         target_locale_code = target_locale.get('code')
+        sentry_tags = {
+            'project': project.get('name'),
+            'string_id': string_id,
+            'target_locale': target_locale_code,
+        }
         try:
             translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
                                                           'html')
             translated_md = html2text_conv.handle(translated.translatedText)
             await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
             logger.info('Updated translation %s -> %s', target_locale_code, string_id)
-        except Exception:
-            sentry_tags = {
-                'project': project.get('name'),
-                'string_id': string_id,
-                'target_locale': target_locale_code
-            }
+        except TranslationError:
+            logger.exception('Could not machine translate text', extra=sentry_tags)
+        except WtiError:
+            sentry_tags.update({'text': translated_md})
             logger.exception('Could not update translation', extra=sentry_tags)
+
     return
 
 
