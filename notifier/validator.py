@@ -61,7 +61,9 @@ async def callback(callback_url, data, is_successful):
 async def check_translations(app, wti_client, content_type, payload, machine_translation, callback_url=None):
     logger.info('translating %s segments', len(payload))
     for data in payload:
-        if data['translation'].get('locale').lower()[0:2] == 'en' and machine_translation:
+        locale_major = data['translation'].get('locale').lower()[0:2]
+        logger.info('Major locale: %s, machine translation enabled: %s', locale_major, machine_translation)
+        if locale_major == 'en' and machine_translation:
             asyncio.ensure_future(app[const.STATS].increment('translations'))
             try:
                 await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
