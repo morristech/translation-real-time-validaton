@@ -1,9 +1,29 @@
 import logging
 
+import aiohttp
+
 from . import httpclient
 from .model import *
 
 logger = logging.getLogger(__name__)
+
+
+class TranslationError(aiohttp.ClientError):
+    def __init__(self, parent_ex, req_params):
+        self.status = getattr(parent_ex, 'status', None)
+        self.message = getattr(parent_ex, 'message', None)
+        self.req_params = req_params
+
+    def __repr__(self):
+        return 'Translator failed, status: %s, message: %s, params: %s' % (self.status, self.message, self.req_params)
+
+
+class UnknownResponse(Exception):
+    def __init__(self, resp_data):
+        self.resp_data = resp_data
+
+    def __repr__(self):
+        return 'Unknown response format: %s' % self.resp_data
 
 
 class GoogleTranslateClient:
@@ -29,8 +49,14 @@ class GoogleTranslateClient:
             'model': self._model,
             'key': self._api_key
         }
-        resp = await self._client.post('', data=params)
-        translation = resp['data']['translations'][0]
+        try:
+            resp = await self._client.post('', data=params)
+        except aiohttp.ClientResponseError as ex:
+            raise TranslationError(ex, params)
+        try:
+            translation = resp['data']['translations'][0]
+        except KeyError:
+            raise UnknownResponse(resp)
         return GoogleTranslation(**translation)
 
     async def languages(self):
