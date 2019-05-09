@@ -100,6 +100,7 @@ async def _check_translation(app, wti_client, content_type, translation):
             email = app[const.APP_SETTINGS].get('email.admin')
         else:
             email = user.email
+        logger.info('Sending validation info to: %s', email)
         await mailer.send(app, email, diff)
         asyncio.ensure_future(app[const.STATS].increment('validations.failed'))
         if user.role != WtiUserRoles.manager:
