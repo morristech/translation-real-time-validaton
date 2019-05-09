@@ -17,6 +17,12 @@ GoogleTranslation = namedtuple('GoogleTranslation', [
 ])
 GoogleTranslation.__new__.__defaults__ = (None,)
 
+GoogleLanguage = namedtuple('GoogleLanguage', [
+    'language',
+    'name'
+])
+GoogleLanguage.__new__.__defaults__ = (None,)
+
 
 class WtiUserRoles(Enum):
     translator = 'translator'

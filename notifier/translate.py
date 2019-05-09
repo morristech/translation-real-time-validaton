@@ -32,6 +32,7 @@ class GoogleTranslateClient:
     def __init__(self, api_key, model='nmt'):
         self._api_key = api_key
         self._model = model
+        self._languages = []
         self._client = httpclient.HttpClient(self.HOST, max_retries=3)
 
     async def shutdown(self):
@@ -39,12 +40,29 @@ class GoogleTranslateClient:
 
     async def bootstrap(self):
         await self._client.bootstrap()
+        self._languages = list(await self.languages())
+
+    def map_locale(self, locale):
+        # try exact match en-US == en-US
+        google_locale = filter(lambda l: l.language.lower() == locale.lower(), self._languages)
+        try:
+            google_locale = list(google_locale)[0]
+            return google_locale
+        except IndexError:
+            # try fuzzy match en-* == en
+            if len(locale) > 2:
+                return self.map_locale(locale[0:2])
+            supported_langs = ', '.join((lang.language for lang in self._languages))
+            raise Exception('Unsupported locale requested: %s. Supported %s' % (locale, supported_langs))
 
     async def translate(self, text, source_locale, target_locale, fmt='text'):
+        s_locale = self.map_locale(source_locale)
+        t_locale = self.map_locale(target_locale)
+
         params = {
             'q': text,
-            'target': target_locale,
-            'source': source_locale,
+            'target': t_locale,
+            'source': s_locale,
             'format': fmt,
             'model': self._model,
             'key': self._api_key
@@ -67,4 +85,4 @@ class GoogleTranslateClient:
         }
         resp = await self._client.get('', data=params)
         languages = resp['data']['languages']
-        return languages
+        return (GoogleLanguage(**language) for language in languages)

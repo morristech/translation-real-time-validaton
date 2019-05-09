@@ -22,6 +22,8 @@ class TestValidator(AsyncTestCase):
         payload = read_fixture('payload.json', decoder=json.loads)
         wti_client = wti.WtiClient('dummy_api')
         trans_client = translate.GoogleTranslateClient('dummy_api')
+        fixture = read_fixture('google_translate_languages.json')
+        self.mock_session_new.request.return_value = AsyncContext(context=self.make_response(body=fixture))
         self.coro(wti_client.bootstrap())
         self.coro(trans_client.bootstrap())
 
