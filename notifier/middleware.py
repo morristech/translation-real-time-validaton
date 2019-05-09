@@ -14,12 +14,12 @@ def log_response_status(res, req):
     status = getattr(res, 'status', 500)
     if status > 299:
         msg = 'operation not successful status:%s path:%s query_string:%s'
-        logger.warning(msg, res.status, req.raw_path, req.query_string)
+        logger.warning(msg, res.status, req.path, req.query_string)
 
 
 def send_stats(res, req):
     stats_client = req.app[const.STATS]
-    path = req.raw_path.strip('/').replace('/', '.')
+    path = req.path.strip('/').replace('/', '.')
     if path in IGNORED_PATHS:
         return
     status = getattr(res, 'status', 'undefined')
