@@ -57,7 +57,8 @@ class WtiClient:
         url = '/%s/strings/%s/locales/%s/translations.json' % (self._api_key, string_id, locale)
         data = await self._request_data(url)
         if data:
-            return WtiString(data['id'], data['locale'], data['text'], WtiTranslationStatus(data['status']))
+            return WtiString(data['id'], data['locale'], data['text'], WtiTranslationStatus(data['status']),
+                             data['updated_at'])
         else:
             return {}
 

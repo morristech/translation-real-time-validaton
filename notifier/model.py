@@ -3,7 +3,7 @@ from collections import namedtuple
 
 WtiUser = namedtuple('WtiUser', ['id', 'email', 'role'])
 WtiProject = namedtuple('WtiProject', ['id', 'name', 'master_locale', 'filename', 'content_type'])
-WtiString = namedtuple('WtiString', ['id', 'locale', 'text', 'status'])
+WtiString = namedtuple('WtiString', ['id', 'locale', 'text', 'status', 'updated_at'])
 
 ZendeskItem = namedtuple('ZendeskItem', ['id', 'name', 'text', 'variants'])
 DynamicContentItem = namedtuple('DynamicContentItem', ['key', 'wti_id', 'zendesk_item'])
