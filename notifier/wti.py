@@ -43,10 +43,13 @@ class WtiClient:
         except aiohttp.ClientError as ex:
             self._handle_response(url, ex)
 
-    async def _update_data(self, url, data):
+    async def _update_data(self, url, data, validation):
         logger.debug('updating wti data url:%s', url)
+        params = {
+            'validation': validation
+        }
         try:
-            await self._client.post(url, data=json.dumps(data))
+            await self._client.post(url, params=params, data=json.dumps(data))
             return data
         except aiohttp.ClientError as ex:
             self._handle_response(url, ex)
@@ -61,7 +64,7 @@ class WtiClient:
         else:
             return {}
 
-    async def create_string(self, dc_item, default_locale):
+    async def create_string(self, dc_item, default_locale, validation=True):
         url = '/%s/strings' % self._api_key
         data = {
             'key': dc_item.key,
@@ -74,7 +77,7 @@ class WtiClient:
                 'status': WtiTranslationStatus.proofread.value
             }]
         }
-        await self._update_data(url, data)
+        await self._update_data(url, data, validation)
 
     async def strings_ids(self):
         url = '/%s/strings.json' % self._api_key
@@ -92,8 +95,8 @@ class WtiClient:
 
     async def change_status(self, translated_string, status=WtiTranslationStatus.unverified):
         url = '/%s/strings/%s/locales/%s/translations' % (self._api_key, translated_string.id, translated_string.locale)
-        data = {'text': translated_string.text, 'status': status.value, 'minor_change': False, 'validation': False}
-        res = await self._update_data(url, data)
+        data = {'text': translated_string.text, 'status': status.value, 'minor_change': False}
+        res = await self._update_data(url, data, False)
         return res
 
     def _filename(self, files, file_id):
@@ -134,6 +137,5 @@ class WtiClient:
             'text': text,
             'status': WtiTranslationStatus.proofread.value,
             'minor_change': False,
-            'validation': validation
         }
-        await self._update_data(url, data)
+        await self._update_data(url, data, validation)
