@@ -40,6 +40,8 @@ async def machine_translate(wti_client, translate_client, data):
             logger.info('Updated translation %s -> %s', target_locale_code, string_id)
         except TranslationError:
             logger.exception('Could not machine translate text', extra=sentry_tags)
+        except UnsupportedLocale as ex:
+            logger.error(ex)
         except WtiError:
             sentry_tags.update({'text': translated_md})
             logger.exception('Could not update translation', extra=sentry_tags)

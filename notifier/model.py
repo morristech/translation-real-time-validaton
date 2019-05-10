@@ -70,5 +70,13 @@ class UnknownResponse(Exception):
     def __init__(self, resp_data):
         self.resp_data = resp_data
 
-    def __repr__(self):
+    def __str__(self):
         return 'Unknown response format: %s' % self.resp_data
+
+
+class UnsupportedLocale(Exception):
+    def __init__(self, locale):
+        self._locale = locale
+
+    def __str__(self):
+        return 'Unsupported locale: %s' % self.locale

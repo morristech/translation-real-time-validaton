@@ -34,8 +34,7 @@ class GoogleTranslateClient:
             # try fuzzy match en-* == en
             if len(locale) > 2:
                 return self.map_locale(locale[0:2])
-            supported_langs = ', '.join((lang.language for lang in self._languages))
-            raise Exception('Unsupported locale requested: %s. Supported %s' % (locale, supported_langs))
+            raise UnsupportedLocale(locale)
 
     async def translate(self, text, source_locale, target_locale, fmt='text'):
         s_locale = self.map_locale(source_locale)
