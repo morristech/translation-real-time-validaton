@@ -46,7 +46,7 @@ class WtiClient:
     async def _update_data(self, url, data, validation):
         logger.debug('updating wti data url:%s', url)
         params = {
-            'validation': validation
+            'validation': 'true' if validation else 'false'
         }
         try:
             await self._client.post(url, params=params, data=json.dumps(data))

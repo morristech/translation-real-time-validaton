@@ -42,10 +42,19 @@ class HttpClient(object):
         if self._max_wait > 0:
             kwargs.setdefault('timeout', self._max_wait)
         async with self._session.request(method, url, **kwargs) as res:
-            res.raise_for_status()
             if 'application/json' in res.headers['CONTENT-TYPE'].lower():
-                return await res.json()
-            return await res.text()
+                data = await res.json()
+            else:
+                data = await res.text()
+            # this is almost like raise_for_status, except it reads response from server and attaches it to exception
+            if 400 <= res.status:
+                raise aiohttp.ClientResponseError(
+                    res.request_info,
+                    res.history,
+                    status=res.status,
+                    message='%s : %s' % (res.reason, data),
+                    headers=res.headers)
+            return data
 
     async def _request_pages(self, method, url, follow_counter=1, **kwargs):
         data = []
