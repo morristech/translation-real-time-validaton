@@ -33,7 +33,7 @@ class TestValidator(AsyncTestCase):
             AsyncContext(context=self.make_response()),
         ])
 
-        self.coro(validator.machine_translate(wti_client, trans_client, payload))
+        self.coro(validator.machine_translate(self.app, wti_client, trans_client, payload))
 
     def test_markdown_translation(self):
         """
@@ -48,7 +48,7 @@ class TestValidator(AsyncTestCase):
         google_resp = read_fixture('translated_markdown.json', decoder=json.loads)
         translation = model.GoogleTranslation(google_resp['data']['translations'][0]['translatedText'], 'g')
         trans_client.translate.return_value = self.make_fut(translation)
-        self.coro(validator.machine_translate(wti_client, trans_client, payload))
+        self.coro(validator.machine_translate(self.app, wti_client, trans_client, payload))
         translated_md = wti_client.update_translation.call_args[0][1]
         diff = content_validator.parse().text(origin_markdown, translated_md).html().check().md().validate()
         if len(diff):

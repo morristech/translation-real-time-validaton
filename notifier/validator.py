@@ -12,18 +12,21 @@ logger = logging.getLogger(__name__)
 UPDATE_PATH = 'admin/refresh_wti'
 
 
-async def machine_translate(wti_client, translate_client, data):
+async def machine_translate(app, wti_client, translate_client, data):
     html2text_conv = html2text.HTML2Text()
     html2text_conv.body_width = 0
     wti_translation = data['translation']
     project = await wti_client.get_project()
     string_id = wti_translation.get('string').get('id')
     logger.info('Auto translating, stringId: %s, for project: %s', string_id, project.get('name'))
+    source_locale_code = project.get('source_locale').get('code')
+    all_target_locale = project.get('target_locales', [])
+    target_locales = list(filter(lambda locale: locale.get('code') != source_locale_code, all_target_locale))
+    asyncio.ensure_future(app[const.STATS].increment('translations', len(target_locales)))
     text = wti_translation.get('text')
     if not text:
         logger.info('Skipping auto translation for empty source text, stringId: %s', string_id)
-    source_locale_code = project.get('source_locale').get('code')
-    target_locales = filter(lambda locale: locale.get('code') != source_locale_code, project.get('target_locales', []))
+        return
     html_text = markdown.markdown(text)
     for target_locale in target_locales:
         target_locale_code = target_locale.get('code')
@@ -35,17 +38,20 @@ async def machine_translate(wti_client, translate_client, data):
         try:
             translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
                                                           'html')
-            translated_md = html2text_conv.handle(translated.translatedText)
+            translated_md = html2text_conv.handle(translated.translatedText).lstrip('\n\n')
             await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
             logger.info('Updated translation %s -> %s', target_locale_code, string_id)
+            asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
         except TranslationError:
             logger.exception('Could not machine translate text', extra=sentry_tags)
+            asyncio.ensure_future(app[const.STATS].increment('translations.failed'))
         except UnsupportedLocale as ex:
-            logger.error(ex)
+            logger.error('%s', ex)
+            asyncio.ensure_future(app[const.STATS].increment('translations.failed'))
         except WtiError:
             sentry_tags.update({'text': translated_md})
             logger.exception('Could not update translation', extra=sentry_tags)
-
+            asyncio.ensure_future(app[const.STATS].increment('translations.failed'))
     return
 
 
@@ -71,10 +77,8 @@ async def check_translations(app, wti_client, content_type, payload, machine_tra
         should_machine_translate = locale_major == 'en' and machine_translation
         logger.info('Major locale: %s, machine translation enabled: %s', locale_major, should_machine_translate)
         if should_machine_translate:
-            asyncio.ensure_future(app[const.STATS].increment('translations'))
             try:
-                await machine_translate(wti_client, app[const.TRANSLATE_CLIENT], data)
-                asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
+                await machine_translate(app, wti_client, app[const.TRANSLATE_CLIENT], data)
             except Exception:
                 logger.exception('Failed to auto translate: %s', data)
             continue
