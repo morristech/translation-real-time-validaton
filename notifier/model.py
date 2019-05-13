@@ -79,4 +79,4 @@ class UnsupportedLocale(Exception):
         self._locale = locale
 
     def __str__(self):
-        return 'Unsupported locale: %s' % self.locale
+        return 'Unsupported locale: %s' % self._locale
