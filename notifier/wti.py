@@ -137,5 +137,6 @@ class WtiClient:
             'text': text,
             'status': WtiTranslationStatus.proofread.value,
             'minor_change': False,
+            'validation': validation
         }
         await self._update_data(url, data, validation)
