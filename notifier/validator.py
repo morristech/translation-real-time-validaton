@@ -12,6 +12,20 @@ logger = logging.getLogger(__name__)
 UPDATE_PATH = 'admin/refresh_wti'
 
 
+async def get_locales_to_translate(wti_client, string_id, target_locales):
+    target_locales = [target_locale.lower() for target_locale in target_locales]
+    coros = [wti_client.string(string_id, locale) for locale in target_locales]
+    translations = await asyncio.gather(*coros)
+    # if there is no translation for given locale
+    existing_translations = list(filter(lambda d: isinstance(d, WtiString), translations))
+    existing_locale = [trans.locale.lower() for trans in existing_translations]
+    missing = [target_locale for target_locale in target_locales if target_locale not in existing_locale]
+    # also these which are not proofread
+    outdated = [d.locale for d in existing_translations if d and d.status != WtiTranslationStatus.proofread]
+    missing.extend(outdated)
+    return set(missing)
+
+
 async def machine_translate(app, wti_client, translate_client, data):
     html2text_conv = html2text.HTML2Text()
     html2text_conv.body_width = 0
@@ -21,15 +35,18 @@ async def machine_translate(app, wti_client, translate_client, data):
     logger.info('Auto translating, stringId: %s, for project: %s', string_id, project.get('name'))
     source_locale_code = project.get('source_locale').get('code')
     all_target_locale = project.get('target_locales', [])
-    target_locales = list(filter(lambda locale: locale.get('code') != source_locale_code, all_target_locale))
-    asyncio.ensure_future(app[const.STATS].increment('translations', len(target_locales)))
+    all_target_locale = [target_locale.get('code') for target_locale in all_target_locale]
+    log_prefix = '[Project: %s][String: %s]' % (project.get('name'), string_id)
+    target_locales = list(filter(lambda locale: locale != source_locale_code, all_target_locale))
+    locales_to_update = await get_locales_to_translate(wti_client, string_id, target_locales)
     text = wti_translation.get('text')
     if not text:
-        logger.info('Skipping auto translation for empty source text, stringId: %s', string_id)
+        logger.info('%s Skipping auto translation for empty source text', log_prefix)
         return
+    asyncio.ensure_future(app[const.STATS].increment('translations', len(locales_to_update)))
     html_text = markdown.markdown(text)
-    for target_locale in target_locales:
-        target_locale_code = target_locale.get('code')
+    logger.info('%s Locales: %s will be translated', log_prefix, ','.join(locales_to_update))
+    for target_locale_code in locales_to_update:
         sentry_tags = {
             'project': project.get('name'),
             'string_id': string_id,
@@ -40,7 +57,7 @@ async def machine_translate(app, wti_client, translate_client, data):
                                                           'html')
             translated_md = html2text_conv.handle(translated.translatedText).lstrip('\n\n')
             await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
-            logger.info('Updated translation %s -> %s', target_locale_code, string_id)
+            logger.info('%s Updated translation for locale %s ', log_prefix, target_locale_code)
             asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
         except TranslationError:
             logger.exception('Could not machine translate text', extra=sentry_tags)
