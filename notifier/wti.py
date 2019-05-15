@@ -128,8 +128,9 @@ class WtiClient:
 
     def section_link(self, project, translated_string):
         section_url = 'https://webtranslateit.com/en/projects/%s-%s/locales/%s..%s/strings/%s'
-        return section_url % (project.id, project.name, project.master_locale, translated_string.locale,
-                              translated_string.id)
+        placeholders = (project.id, project.name, project.master_locale, translated_string.locale, translated_string.id)
+        url = section_url % placeholders
+        return url.replace(' ', '-')
 
     async def update_translation(self, string_id, text, locale, validation=True):
         url = '/%s/strings/%s/locales/%s/translations.json' % (self._api_key, string_id, locale)
