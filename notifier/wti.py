@@ -79,6 +79,14 @@ class WtiClient:
         }
         await self._update_data(url, data, validation)
 
+    async def delete_string(self, string_id):
+        url = '/%s/strings/%s' % (self._api_key, string_id)
+        try:
+            data = await self._client.delete(url)
+            return data
+        except aiohttp.ClientError as ex:
+            self._handle_response(url, ex)
+
     async def strings_ids(self):
         url = '/%s/strings.json' % self._api_key
         data = await self._client.request('GET', url, follow_links=True)
