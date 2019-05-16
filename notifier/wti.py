@@ -140,11 +140,12 @@ class WtiClient:
         url = section_url % placeholders
         return url.replace(' ', '-')
 
-    async def update_translation(self, string_id, text, locale, validation=True):
+    async def update_translation(self, string_id, text, locale, status=WtiTranslationStatus.proofread,
+                                 validation=True):
         url = '/%s/strings/%s/locales/%s/translations.json' % (self._api_key, string_id, locale)
         data = {
             'text': text,
-            'status': WtiTranslationStatus.proofread.value,
+            'status': status.value,
             'minor_change': False,
             'validation': validation
         }

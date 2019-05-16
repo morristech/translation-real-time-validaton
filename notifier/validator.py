@@ -20,8 +20,9 @@ async def get_locales_to_translate(wti_client, string_id, target_locales):
     existing_translations = list(filter(lambda d: isinstance(d, WtiString), translations))
     existing_locale = [trans.locale.lower() for trans in existing_translations]
     missing = [target_locale for target_locale in target_locales if target_locale not in existing_locale]
-    # also these which are not proofread
-    outdated = [d.locale for d in existing_translations if d and d.status != WtiTranslationStatus.proofread]
+    # if translation is missing or unverified we should update it
+    to_translate = [WtiTranslationStatus.untranslated, WtiTranslationStatus.unverified]
+    outdated = [d.locale for d in existing_translations if d and d.status in to_translate]
     missing.extend(outdated)
     return set(missing)
 
@@ -56,7 +57,8 @@ async def machine_translate(app, wti_client, translate_client, data):
             translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
                                                           'html')
             translated_md = html2text_conv.handle(translated.translatedText).lstrip('\n\n')
-            await wti_client.update_translation(string_id, translated_md, target_locale_code, False)
+            await wti_client.update_translation(string_id, translated_md, target_locale_code,
+                                                WtiTranslationStatus.unproofread, False)
             logger.info('%s Updated translation for locale %s ', log_prefix, target_locale_code)
             asyncio.ensure_future(app[const.STATS].increment('translations.succeeded'))
         except TranslationError:
