@@ -11,6 +11,8 @@ from .model import *
 logger = logging.getLogger(__name__)
 UPDATE_PATH = 'admin/refresh_wti'
 
+EXCLUDED_LOCALES = ('ru', 'ar', 'he')
+
 
 async def get_locales_to_translate(wti_client, string_id, target_locales):
     target_locales = [target_locale.lower() for target_locale in target_locales]
@@ -24,7 +26,7 @@ async def get_locales_to_translate(wti_client, string_id, target_locales):
     to_translate = [WtiTranslationStatus.untranslated, WtiTranslationStatus.unverified]
     outdated = [d.locale for d in existing_translations if d and d.status in to_translate]
     missing.extend(outdated)
-    return set(missing)
+    return set(missing).difference(EXCLUDED_LOCALES)
 
 
 async def machine_translate(app, wti_client, translate_client, data):
