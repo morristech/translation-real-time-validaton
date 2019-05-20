@@ -70,5 +70,6 @@ class TestValidator(AsyncTestCase):
             self.make_fut(WtiString(1, 'ru', 'TEXT1', WtiTranslationStatus('status_unverified'), 'DATE')),
             self.make_fut({})
         ])
-        got = self.coro(validator.get_locales_to_translate(wti_client, 'NONE', ['de', 'pl', 'es']))
+        coro = validator.get_locales_to_translate(wti_client, 'NONE', ['de', 'pl', 'es'], validator.TRANSLATEABLE_SEG)
+        got = self.coro(coro)
         self.assertCountEqual(got, ['pl', 'es'])

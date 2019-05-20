@@ -12,9 +12,13 @@ logger = logging.getLogger(__name__)
 UPDATE_PATH = 'admin/refresh_wti'
 
 EXCLUDED_LOCALES = ('ru', 'ar', 'he')
+TRANSLATEABLE_SEG = (
+    WtiTranslationStatus.untranslated,
+    WtiTranslationStatus.unverified
+)
 
 
-async def get_locales_to_translate(wti_client, string_id, target_locales):
+async def get_locales_to_translate(wti_client, string_id, target_locales, target_segments):
     target_locales = [target_locale.lower() for target_locale in target_locales]
     coros = [wti_client.string(string_id, locale) for locale in target_locales]
     translations = await asyncio.gather(*coros)
@@ -23,13 +27,12 @@ async def get_locales_to_translate(wti_client, string_id, target_locales):
     existing_locale = [trans.locale.lower() for trans in existing_translations]
     missing = [target_locale for target_locale in target_locales if target_locale not in existing_locale]
     # if translation is missing or unverified we should update it
-    to_translate = [WtiTranslationStatus.untranslated, WtiTranslationStatus.unverified]
-    outdated = [d.locale for d in existing_translations if d and d.status in to_translate]
+    outdated = [d.locale for d in existing_translations if d and d.status in target_segments]
     missing.extend(outdated)
     return set(missing).difference(EXCLUDED_LOCALES)
 
 
-async def machine_translate(dd_stats, wti_client, translate_client, data):
+async def machine_translate(dd_stats, wti_client, translate_client, data, target_segments=TRANSLATEABLE_SEG):
     html2text_conv = html2text.HTML2Text()
     html2text_conv.body_width = 0
     wti_translation = data['translation']
@@ -41,7 +44,7 @@ async def machine_translate(dd_stats, wti_client, translate_client, data):
     all_target_locale = [target_locale.get('code') for target_locale in all_target_locale]
     log_prefix = '[Project: %s][String: %s]' % (project.get('name'), string_id)
     target_locales = list(filter(lambda locale: locale != source_locale_code, all_target_locale))
-    locales_to_update = await get_locales_to_translate(wti_client, string_id, target_locales)
+    locales_to_update = await get_locales_to_translate(wti_client, string_id, target_locales, target_segments)
     text = wti_translation.get('text')
     if not text:
         logger.info('%s Skipping auto translation for empty source text', log_prefix)
@@ -56,7 +59,7 @@ async def machine_translate(dd_stats, wti_client, translate_client, data):
             'target_locale': target_locale_code,
         }
         try:
-            translated = await translate_client.translate(html_text, wti_translation.get('locale'), target_locale_code,
+            translated = await translate_client.translate(html_text, source_locale_code, target_locale_code,
                                                           'html')
             translated_md = html2text_conv.handle(translated.translatedText).lstrip('\n\n')
             await wti_client.update_translation(string_id, translated_md, target_locale_code,
