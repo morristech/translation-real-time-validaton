@@ -36,7 +36,7 @@ class GoogleTranslateClient:
                 return self.map_locale(locale[0:2])
             raise UnsupportedLocale(locale)
         except Exception:
-            logger.exception('Something went wrong, requested locale: %s, available: %s', locale, 
+            logger.exception('Something went wrong, requested locale: %s, available: %s', locale,
                              ', '.join((lang.language for lang in self._languages)))
 
     async def translate(self, text, source_locale, target_locale, fmt='text'):

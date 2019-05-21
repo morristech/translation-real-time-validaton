@@ -36,6 +36,7 @@ class WtiTranslationStatus(Enum):
     unproofread = 'status_unproofread'
     proofread = 'status_proofread'
     hidden = 'status_hidden'
+    obsolete = 'status_obsolete'
 
     def __str__(self):
         return '{0}'.format(self.value)
