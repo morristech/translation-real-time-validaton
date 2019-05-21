@@ -24,7 +24,7 @@ class GoogleTranslateClient:
         await self._client.bootstrap()
         self._languages = list(await self.languages())
 
-    def map_locale(self, locale):
+    def map_locale(self, locale: str):
         # try exact match en-US == en-US
         google_locale = filter(lambda l: l.language.lower() == locale.lower(), self._languages)
         try:
@@ -35,6 +35,9 @@ class GoogleTranslateClient:
             if len(locale) > 2:
                 return self.map_locale(locale[0:2])
             raise UnsupportedLocale(locale)
+        except Exception:
+            logger.exception('Something went wrong, requested locale: %s, available: %s', locale, 
+                             ', '.join((lang.language for lang in self._languages)))
 
     async def translate(self, text, source_locale, target_locale, fmt='text'):
         s_locale = self.map_locale(source_locale)
