@@ -37,6 +37,9 @@ class WtiTranslationStatus(Enum):
     proofread = 'status_proofread'
     hidden = 'status_hidden'
 
+    def __str__(self):
+        return '{0}'.format(self.value)
+
 
 class WtiContentTypes(Enum):
     ios = 'ios'
