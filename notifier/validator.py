@@ -19,12 +19,11 @@ TRANSLATEABLE_SEG = (
 
 
 async def get_locales_to_translate(wti_client, string_id, target_locales, target_segments):
-    target_locales = [target_locale.lower() for target_locale in target_locales]
     coros = [wti_client.string(string_id, locale) for locale in target_locales]
     translations = await asyncio.gather(*coros)
     # if there is no translation for given locale
     existing_translations = list(filter(lambda d: isinstance(d, WtiString), translations))
-    existing_locale = [trans.locale.lower() for trans in existing_translations]
+    existing_locale = [trans.locale for trans in existing_translations]
     missing = [target_locale for target_locale in target_locales if target_locale not in existing_locale]
     # if translation is missing or unverified we should update it
     outdated = [d.locale for d in existing_translations if d and d.status in target_segments]
