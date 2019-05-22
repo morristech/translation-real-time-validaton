@@ -87,9 +87,12 @@ class WtiClient:
         except aiohttp.ClientError as ex:
             self._handle_response(url, ex)
 
-    async def strings_ids(self):
+    async def strings_ids(self, include_obsolete=True):
         url = '/%s/strings.json' % self._api_key
-        data = await self._client.request('GET', url, follow_links=True)
+        params = {}
+        if not include_obsolete:
+            params['filters[status]'] = 'current'
+        data = await self._client.request('GET', url, params=params, follow_links=True)
         return {item['key']: item['id'] for item in data}
 
     async def user(self, user_id):
