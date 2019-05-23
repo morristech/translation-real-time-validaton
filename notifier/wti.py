@@ -88,12 +88,27 @@ class WtiClient:
             self._handle_response(url, ex)
 
     async def strings_ids(self, include_obsolete=True):
+        """
+        DEPRECATED
+        Use get_strings instead
+        
+        :param include_obsolete: 
+        :return: 
+        """
         url = '/%s/strings.json' % self._api_key
         params = {}
         if not include_obsolete:
             params['filters[status]'] = 'current'
         data = await self._client.request('GET', url, params=params, follow_links=True)
         return {item['key']: item['id'] for item in data}
+
+    async def get_strings(self, include_obsolete=True):
+        url = '/%s/strings.json' % self._api_key
+        params = {}
+        if not include_obsolete:
+            params['filters[status]'] = 'current'
+        data = await self._client.request('GET', url, params=params, follow_links=True)
+        return {item['id']: item for item in data}
 
     async def user(self, user_id):
         url = '/%s/users.json' % self._api_key
