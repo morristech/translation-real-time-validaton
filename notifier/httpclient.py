@@ -61,9 +61,17 @@ class HttpClient(object):
         if self._max_wait > 0:
             kwargs.setdefault('timeout', self._max_wait)
         async with self._session.request(method, url, **kwargs) as res:
-            res.raise_for_status()
             if 'application/json' in res.headers['CONTENT-TYPE'].lower():
                 data.extend(await res.json())
+            else:
+                data = res.text()
+            if 400 <= res.status:
+                raise aiohttp.ClientResponseError(
+                    res.request_info,
+                    res.history,
+                    status=res.status,
+                    message='%s : %s' % (res.reason, data),
+                    headers=res.headers)
             next_page = self._next_page_link(res.headers)
             if next_page and follow_counter < self._max_follow_links:
                 next_page_data = await self._request_pages(method, next_page, follow_counter + 1, **kwargs)
