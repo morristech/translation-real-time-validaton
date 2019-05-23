@@ -42,6 +42,26 @@ class WtiTranslationStatus(Enum):
         return '{0}'.format(self.value)
 
 
+class WtiStringStatus(Enum):
+    """
+    based on https://webtranslateit.com/en/docs/api/string/#list-string
+    """
+    untranslated = 'to_translate'
+    unverified = 'to_verify'
+    unproofread = 'to_proofread'
+    proofread = 'done'
+    hidden = 'hidden'
+    obsolete = 'obsolete'
+    current = 'current'
+    all = None
+
+    def __str__(self):
+        return '{0}'.format(self.value)
+
+    def __repr__(self):
+        return '{0}'.format(self.name)
+
+
 class WtiContentTypes(Enum):
     ios = 'ios'
     md = 'md'
