@@ -102,13 +102,22 @@ class WtiClient:
         data = await self._client.request('GET', url, params=params, follow_links=True)
         return {item['key']: item['id'] for item in data}
 
-    async def get_strings(self, include_obsolete=True):
+    async def get_strings(self, status: WtiStringStatus = WtiStringStatus.current, **kwargs):
         url = '/%s/strings.json' % self._api_key
         params = {}
-        if not include_obsolete:
-            params['filters[status]'] = 'current'
-        data = await self._client.request('GET', url, params=params, follow_links=True)
-        return {item['id']: item for item in data}
+        try:
+            if status:
+                params['filters[status]'] = status.value
+            if status in [WtiStringStatus.untranslated, WtiStringStatus.unverified, WtiStringStatus.unproofread, 
+                          WtiStringStatus.proofread]:
+                params['filters[locale]'] = kwargs['locale']
+        except KeyError:
+            raise Exception('Expecting locale for status type %s' % status)
+        try:
+            data = await self._client.request('GET', url, params=params, follow_links=True)
+            return {item['id']: item for item in data}
+        except aiohttp.ClientError as ex:
+            raise WtiError(ex)
 
     async def user(self, user_id):
         url = '/%s/users.json' % self._api_key
