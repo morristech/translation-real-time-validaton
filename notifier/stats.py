@@ -15,3 +15,8 @@ class Stats:
         metric_name = self._prefix % name
         tags_fmt = ['%s:%s' % (k, v) for k, v in tags.items()]
         self._handler.increment(metric_name, value, tags=tags_fmt)
+
+    def gauge(self, name, value, **tags):
+        metric_name = self._prefix % name
+        tags_fmt = ['%s:%s' % (k, v) for k, v in tags.items()]
+        self._handler.gauge(metric_name, value, tags=tags_fmt)
