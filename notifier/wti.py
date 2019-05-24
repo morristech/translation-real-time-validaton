@@ -117,7 +117,13 @@ class WtiClient:
             data = await self._client.request('GET', url, params=params, follow_links=True)
             return {item['id']: item for item in data}
         except aiohttp.ClientError as ex:
-            raise WtiError(ex)
+            # WTI API returns 404 when list of strings is empty
+            status = getattr(ex, 'status', 0)
+            msg = getattr(ex, 'message', '')
+            if status == 404 and msg == []:
+                return []
+            else:
+                raise WtiError(ex)
 
     async def user(self, user_id):
         url = '/%s/users.json' % self._api_key

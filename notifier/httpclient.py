@@ -52,7 +52,7 @@ class HttpClient(object):
                     res.request_info,
                     res.history,
                     status=res.status,
-                    message='%s : %s' % (res.reason, data),
+                    message=data,
                     headers=res.headers)
             return data
 
@@ -70,7 +70,7 @@ class HttpClient(object):
                     res.request_info,
                     res.history,
                     status=res.status,
-                    message='%s : %s' % (res.reason, data),
+                    message=data,
                     headers=res.headers)
             next_page = self._next_page_link(res.headers)
             if next_page and follow_counter < self._max_follow_links:
