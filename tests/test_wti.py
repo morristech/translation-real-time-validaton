@@ -81,4 +81,5 @@ class TestTranslate(AsyncTestCase):
         expected_url = 'https://webtranslateit.com/api/projects/xxx/strings.json?page=2'
         self.mock_session_new.request.assert_called_with('GET',
                                                          expected_url,
+                                                         params={},
                                                          timeout=0)
