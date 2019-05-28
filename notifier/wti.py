@@ -91,9 +91,8 @@ class WtiClient:
         """
         DEPRECATED
         Use get_strings instead
-        
-        :param include_obsolete: 
-        :return: 
+        :param include_obsolete:
+        :return:
         """
         url = '/%s/strings.json' % self._api_key
         params = {}
@@ -102,13 +101,13 @@ class WtiClient:
         data = await self._client.request('GET', url, params=params, follow_links=True)
         return {item['key']: item['id'] for item in data}
 
-    async def get_strings(self, status: WtiStringStatus = WtiStringStatus.current, **kwargs):
+    async def get_strings(self, status=WtiStringStatus.current, **kwargs):
         url = '/%s/strings.json' % self._api_key
         params = {}
         try:
             if status:
                 params['filters[status]'] = status.value
-            if status in [WtiStringStatus.untranslated, WtiStringStatus.unverified, WtiStringStatus.unproofread, 
+            if status in [WtiStringStatus.untranslated, WtiStringStatus.unverified, WtiStringStatus.unproofread,
                           WtiStringStatus.proofread]:
                 params['filters[locale]'] = kwargs['locale']
         except KeyError:
