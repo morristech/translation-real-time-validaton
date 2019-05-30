@@ -73,3 +73,11 @@ class TestValidator(AsyncTestCase):
         coro = validator.get_locales_to_translate(wti_client, 'NONE', ['de', 'pl', 'es'], validator.TRANSLATEABLE_SEG)
         got = self.coro(coro)
         self.assertCountEqual(got, ['pl', 'es'])
+
+    def test_html_escaping(self):
+        mixed_content = read_fixture('mixed-content.txt')
+        escaped, placeholders = translate.mask_html_tags(mixed_content)
+        unescaped = translate.unmask_html_tags(escaped, placeholders)
+        unescaped2 = translate.unmask_html_tags(escaped, placeholders)
+        self.assertEqual(mixed_content, unescaped)
+        self.assertEqual(mixed_content, unescaped2)

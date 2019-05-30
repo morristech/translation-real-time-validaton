@@ -5,7 +5,7 @@ import asyncio
 import markdown
 import html2text
 
-from . import compare, mailer, const
+from . import compare, mailer, const, translate
 from .model import *
 
 logger = logging.getLogger(__name__)
@@ -45,13 +45,12 @@ async def machine_translate(dd_stats, wti_client, translate_client, data, conten
     log_prefix = '[Project: %s][String: %s]' % (project.get('name'), string_id)
     target_locales = list(filter(lambda locale: locale != source_locale_code, all_target_locale))
     locales_to_update = await get_locales_to_translate(wti_client, string_id, target_locales, target_segments)
-    text = wti_translation.get('text')
+    text, placeholders = translate.mask_html_tags(wti_translation.get('text'))
     if not text:
         logger.info('%s Skipping auto translation for empty source text', log_prefix)
         return
     asyncio.ensure_future(dd_stats.increment('translations', len(locales_to_update)))
     html_text = markdown.markdown(text)
-    fmt = 'html' if content_type == 'md' else 'text'
     logger.info('%s Locales: %s will be translated', log_prefix, ','.join(locales_to_update))
     for target_locale_code in locales_to_update:
         sentry_tags = {
@@ -60,14 +59,11 @@ async def machine_translate(dd_stats, wti_client, translate_client, data, conten
             'target_locale': target_locale_code,
         }
         try:
-            translated = await translate_client.translate(html_text, source_locale_code, target_locale_code, fmt)
+            translated = await translate_client.translate(html_text, source_locale_code, target_locale_code, 'html')
             translated_md = html2text_conv.handle(translated.translatedText).lstrip('\n\n')
-            if fmt == 'html':
-                await wti_client.update_translation(string_id, translated_md, target_locale_code,
-                                                    WtiTranslationStatus.unproofread, False)
-            else:
-                await wti_client.update_translation(string_id, translated, target_locale_code,
-                                                    WtiTranslationStatus.unproofread, False)
+            unescaped_translated = translate.unmask_html_tags(translated_md, placeholders)
+            await wti_client.update_translation(string_id, unescaped_translated, target_locale_code,
+                                                WtiTranslationStatus.unproofread, False)
             logger.info('%s Updated translation for locale %s ', log_prefix, target_locale_code)
             asyncio.ensure_future(dd_stats.increment('translations.succeeded'))
         except TranslationError:

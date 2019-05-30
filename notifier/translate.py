@@ -1,4 +1,5 @@
 import logging
+import re
 
 import aiohttp
 
@@ -6,6 +7,35 @@ from . import httpclient
 from .model import *
 
 logger = logging.getLogger(__name__)
+
+
+def mask_html_tags(text):
+    """
+    Escapes html tags in a way that is going to be useful for using google translate with fmt = html
+    Unfortunately html.escape won't work
+    Each tag gets substituted with placeholder $$IDX$$ where IDX is number,
+    :param text:
+    :return:
+    """
+    def repl(match):
+        placeholders.append(match.group(0))
+        return '$${}$$'.format(len(placeholders) - 1)
+
+    placeholders = []
+    html_tag_regex = r"<.*?>"
+    masked = re.sub(html_tag_regex, repl, text)
+    return masked, placeholders
+
+
+def unmask_html_tags(text, placeholders):
+    def repl(match):
+        tag = p.pop(0)
+        return tag
+
+    p = placeholders.copy()
+    placeholder_regex = r"\$\$\s?\d*\s?\$\$"
+    unescaped = re.sub(placeholder_regex, repl, text)
+    return unescaped
 
 
 class GoogleTranslateClient:
