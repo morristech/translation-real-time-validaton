@@ -31,8 +31,7 @@ async def get_locales_to_translate(wti_client, string_id, target_locales, target
     return set(missing).difference(EXCLUDED_LOCALES)
 
 
-async def machine_translate(dd_stats, wti_client, translate_client, data, content_type,
-                            target_segments=TRANSLATEABLE_SEG):
+async def machine_translate(dd_stats, wti_client, translate_client, data, target_segments=TRANSLATEABLE_SEG):
     html2text_conv = html2text.HTML2Text()
     html2text_conv.body_width = 0
     wti_translation = data['translation']
@@ -102,7 +101,7 @@ async def check_translations(app, wti_client, content_type, payload, machine_tra
         logger.info('Major locale: %s, machine translation enabled: %s', locale_major, should_machine_translate)
         if should_machine_translate:
             try:
-                await machine_translate(app[const.STATS], wti_client, app[const.TRANSLATE_CLIENT], data, content_type)
+                await machine_translate(app[const.STATS], wti_client, app[const.TRANSLATE_CLIENT], data)
             except Exception:
                 logger.exception('Failed to auto translate: %s', data)
             continue
