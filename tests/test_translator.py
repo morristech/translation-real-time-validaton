@@ -36,7 +36,7 @@ class TestValidator(AsyncTestCase):
             AsyncContext(context=self.make_response()),
         ])
 
-        self.coro(validator.machine_translate(self.stats_mock, wti_client, trans_client, payload, 'md'))
+        self.coro(validator.machine_translate(self.stats_mock, wti_client, trans_client, payload))
 
     @patch('notifier.validator.get_locales_to_translate')
     def test_markdown_translation(self, mock):
@@ -53,7 +53,7 @@ class TestValidator(AsyncTestCase):
         google_resp = read_fixture('translated_markdown.json', decoder=json.loads)
         translation = GoogleTranslation(google_resp['data']['translations'][0]['translatedText'], 'g')
         trans_client.translate.return_value = self.make_fut(translation)
-        self.coro(validator.machine_translate(self.stats_mock, wti_client, trans_client, payload, 'md'))
+        self.coro(validator.machine_translate(self.stats_mock, wti_client, trans_client, payload))
         translated_md = wti_client.update_translation.call_args[0][1]
         diff = content_validator.parse().text(origin_markdown, translated_md).html().check().md().validate()
         if len(diff):
@@ -73,3 +73,11 @@ class TestValidator(AsyncTestCase):
         coro = validator.get_locales_to_translate(wti_client, 'NONE', ['de', 'pl', 'es'], validator.TRANSLATEABLE_SEG)
         got = self.coro(coro)
         self.assertCountEqual(got, ['pl', 'es'])
+
+    def test_html_escaping(self):
+        mixed_content = read_fixture('mixed-content.txt')
+        escaped, placeholders = translate.mask_html_tags(mixed_content)
+        unescaped = translate.unmask_html_tags(escaped, placeholders)
+        unescaped2 = translate.unmask_html_tags(escaped, placeholders)
+        self.assertEqual(mixed_content, unescaped)
+        self.assertEqual(mixed_content, unescaped2)
