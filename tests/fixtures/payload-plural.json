@@ -1,0 +1,29 @@
+{
+    "string_id": 7266198,
+    "user_id": 19362,
+    "file_id": 395411,
+    "locale": "pl",
+    "project_id": 9800,
+    "api_url": "https://webtranslateit.com/api/projects/A2fgb3QGvixmwyPM-Twinw/files/395411/locales/pl",
+    "translation": {
+        "id": 50608544,
+        "locale": "en",
+        "text": {
+            "one": "%1$s tab",
+            "other": "%1$s tabs",
+            "zero": "No tabs"
+        },
+        "status": "status_unproofread",
+        "created_at": "2018-07-03T11:56:45Z",
+        "updated_at": "2018-07-03T11:56:45Z",
+        "version": 1,
+        "string": {
+            "id": 16588932,
+            "key": "tabs_count",
+            "plural": true,
+            "type": "String",
+            "dev_comment": "Tabs screen",
+            "status": "Current"
+        }
+    }
+}

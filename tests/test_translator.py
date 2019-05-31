@@ -39,6 +39,28 @@ class TestValidator(AsyncTestCase):
         self.coro(validator.machine_translate(self.stats_mock, wti_client, trans_client, payload))
 
     @patch('notifier.validator.get_locales_to_translate')
+    def test_translating_plural(self, mock):
+        mock.return_value = self.make_fut(['de'])
+        payload = read_fixture('payload-plural.json', decoder=json.loads)
+        wti_client = MagicMock(spec=wti.WtiClient)
+        wti_client.get_project.return_value = self.make_fut(read_fixture('project.json', decoder=json.loads)['project'])
+        wti_client.update_translation.return_value = self.make_fut()
+        trans_client = translate.GoogleTranslateClient('dummy_api')
+        fixture = read_fixture('google_translate_languages.json')
+        self.mock_session_new.request.return_value = AsyncContext(context=self.make_response(body=fixture))
+        self.coro(trans_client.bootstrap())
+
+        self.mock_session_new.request.side_effect = iter([
+            AsyncContext(context=self.make_response(read_fixture('google_translate.json'))),
+            AsyncContext(context=self.make_response(read_fixture('google_translate.json'))),
+            AsyncContext(context=self.make_response(read_fixture('google_translate.json'))),
+            AsyncContext(context=self.make_response()),
+        ])
+        self.coro(validator.machine_translate(self.stats_mock, wti_client, trans_client, payload))
+        translated_md = wti_client.update_translation.call_args[0][1]
+        self.assertEqual(len(translated_md.keys()), 3)
+
+    @patch('notifier.validator.get_locales_to_translate')
     def test_markdown_translation(self, mock):
         """
         for documenting purposes
