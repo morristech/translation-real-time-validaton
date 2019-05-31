@@ -32,6 +32,7 @@ async def get_text_translation(translate_client, text, source_locale_code, targe
 async def get_wti_translation(translate_client, wti_translation, source_locale_code, target_locale_code):
     wti_text = wti_translation.get('text')
     if wti_translation['string'].get('plural', False):
+        logger.debug('WTI string: %s is plural', wti_translation['string']['id'])
         translated = wti_text.copy()
         for k, v in wti_text.items():
             translated[k] = await get_text_translation(translate_client, wti_text[k], source_locale_code,
@@ -73,7 +74,7 @@ async def machine_translate(dd_stats, wti_client, translate_client, data, target
     for target_locale_code in locales_to_update:
         sentry_tags = {
             'project': project.get('name'),
-            'string_id': string_id,
+            'translation': wti_translation,
             'target_locale': target_locale_code,
         }
         try:
@@ -87,11 +88,14 @@ async def machine_translate(dd_stats, wti_client, translate_client, data, target
             logger.exception('Could not machine translate text', extra=sentry_tags)
             asyncio.ensure_future(dd_stats.increment('translations.failed'))
         except UnsupportedLocale as ex:
-            logger.error('%s', ex)
+            logger.error('%s', ex, extra=sentry_tags)
             asyncio.ensure_future(dd_stats.increment('translations.failed'))
         except WtiError:
-            sentry_tags.update({'text': translated})
+            sentry_tags.update({'translated': translated})
             logger.exception('Could not update translation', extra=sentry_tags)
+            asyncio.ensure_future(dd_stats.increment('translations.failed'))
+        except Exception:
+            logger.exception('Something went wrong', extra=sentry_tags)
             asyncio.ensure_future(dd_stats.increment('translations.failed'))
     return
 
@@ -145,7 +149,8 @@ async def _check_translation(app, wti_client, content_type, translation):
     base_string = await wti_client.string(translation['string_id'], project.master_locale)
     translation_status = WtiTranslationStatus(translation['translation'].get('status'))
     translated_string = WtiString(translation['string_id'], translation['locale'], translation['translation']['text'],
-                                  translation_status, translation['translation']['updated_at'])
+                                  translation_status, translation['translation']['updated_at'],
+                                  translation['translation']['string']['plural'])
     diff = await app.loop.run_in_executor(None, compare.diff, wti_client, project, base_string, translated_string)
     if diff and (diff.url_errors or diff.md_error):
         logger.info('errors found in string %s, project %s', translation['string_id'], translation['project_id'])

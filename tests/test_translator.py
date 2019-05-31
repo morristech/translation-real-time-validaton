@@ -87,9 +87,9 @@ class TestValidator(AsyncTestCase):
         en_trans = read_fixture('translation_en-US.json', decoder=json.loads)
         en_trans['status'] = 'status_proofread'
         wti_client.string.side_effect = iter([
-            self.make_fut(WtiString(1, 'de', 'TEXT1', WtiTranslationStatus('status_proofread'), 'DATE')),
-            self.make_fut(WtiString(1, 'pl', 'TEXT1', WtiTranslationStatus('status_unverified'), 'DATE')),
-            self.make_fut(WtiString(1, 'ru', 'TEXT1', WtiTranslationStatus('status_unverified'), 'DATE')),
+            self.make_fut(WtiString(1, 'de', 'TEXT1', WtiTranslationStatus('status_proofread'), 'DATE', False)),
+            self.make_fut(WtiString(1, 'pl', 'TEXT1', WtiTranslationStatus('status_unverified'), 'DATE', False)),
+            self.make_fut(WtiString(1, 'ru', 'TEXT1', WtiTranslationStatus('status_unverified'), 'DATE', False)),
             self.make_fut({})
         ])
         coro = validator.get_locales_to_translate(wti_client, 'NONE', ['de', 'pl', 'es'], validator.TRANSLATEABLE_SEG)

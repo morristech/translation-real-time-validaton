@@ -60,7 +60,7 @@ class WtiClient:
         data = await self._request_data(url)
         if data:
             return WtiString(data['id'], data['locale'], data['text'], WtiTranslationStatus(data['status']),
-                             data['updated_at'])
+                             data['updated_at'], data['string']['plural'])
         else:
             return {}
 
