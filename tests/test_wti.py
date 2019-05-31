@@ -22,7 +22,8 @@ class TestTranslate(AsyncTestCase):
         self.mock_session_new.request.assert_called_once()
 
     def test_string(self):
-        expected = WtiString(22683983, 'pl', '#bbb\n\nbbb', WtiTranslationStatus.unproofread, '2015-01-22T00:05:01Z')
+        expected = WtiString(22683983, 'pl', '#bbb\n\nbbb', WtiTranslationStatus.unproofread, '2015-01-22T00:05:01Z',
+                             False)
         fixture = read_fixture('translation_pl.json')
         self.mock_session_new.request.return_value = AsyncContext(context=self.make_response(body=fixture))
         actual = self.coro(self.client.string('dummy_id', 'dummy_locale'))
@@ -49,7 +50,7 @@ class TestTranslate(AsyncTestCase):
 
     def test_change_status(self):
         self.mock_wait.return_value = self.make_res(status=202)
-        string = WtiString('dummy_id', 'dummy_text', 'dummy_locale', 'STATUS', '2015-01-22T00:05:01Z')
+        string = WtiString('dummy_id', 'dummy_text', 'dummy_locale', 'STATUS', '2015-01-22T00:05:01Z', False)
         actual = self.coro(self.client.change_status(string))
         self.assertTrue(actual)
 
